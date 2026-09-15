@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { PersuadeNav } from "@/components/site/persuade-nav";
+import { SiteFooter } from "@/components/site/site-footer";
 import {
   CartelGraph,
   type CartelNode,
@@ -147,15 +148,9 @@ export default async function CartelPage() {
         <CartelGraph nodes={nodes} edges={edges} clusters={clusters} />
       </div>
 
-      <footer className="border-t border-ink-950/10 bg-ink-950">
-        <div className="mx-auto max-w-dashboard px-4 py-10 text-xs leading-relaxed text-paper/40 sm:px-6">
-          <p>
-            This is a fixed demonstration scenario — no live IP/PAN scanning or graph-clustering algorithm runs in
-            this build. Sri Balaji Infra Projects and Deccan Builders &amp; Co. are real sample contractor accounts
-            reused for narrative continuity; every other entity and signal shown is illustrative.
-          </p>
-        </div>
-      </footer>
+      <SiteFooter
+        disclaimer="This is a fixed demonstration scenario — no live IP/PAN scanning or graph-clustering algorithm runs in this build. Sri Balaji Infra Projects and Deccan Builders & Co. are real sample contractor accounts reused for narrative continuity; every other entity and signal shown is illustrative."
+      />
     </main>
   );
 }

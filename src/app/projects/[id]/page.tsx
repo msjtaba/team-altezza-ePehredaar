@@ -8,6 +8,7 @@ import { JanPramaanBanner } from "@/components/jan-pramaan-banner";
 import { formatRupees, formatLakhShort, formatDate } from "@/lib/format";
 import { PROJECT_CATEGORY_LABELS, PROJECT_STAGE_LABELS, isStageCompletedOrLater, type ProjectCategory, type ProjectStage } from "@/lib/enums";
 import { PersuadeNav } from "@/components/site/persuade-nav";
+import { SiteFooter } from "@/components/site/site-footer";
 import { SatelliteMap } from "@/components/satellite-map";
 
 /**
@@ -183,6 +184,8 @@ export default async function ProjectDetailPage({
           </section>
         )}
       </div>
+
+      <SiteFooter />
     </main>
   );
 }

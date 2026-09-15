@@ -3,6 +3,7 @@ import { WarningCircle } from "@phosphor-icons/react/dist/ssr";
 import { prisma } from "@/lib/prisma";
 import { riskTierFromScore } from "@/lib/enums";
 import { PersuadeNav } from "@/components/site/persuade-nav";
+import { SiteFooter } from "@/components/site/site-footer";
 import { DashboardIndiaMap, type StateStat } from "@/components/national-dashboard/dashboard-india-map";
 import { DashboardTrendChart, type TrendPoint } from "@/components/national-dashboard/dashboard-trend-chart";
 import { DashboardAlertBreakdownChart } from "@/components/national-dashboard/dashboard-alert-breakdown-chart";
@@ -243,16 +244,9 @@ export default async function NationalOverviewPage() {
         </div>
       </div>
 
-      <footer className="border-t border-ink-950/10 bg-ink-950">
-        <div className="mx-auto max-w-dashboard px-4 py-10 text-xs leading-relaxed text-paper/40 sm:px-6">
-          <p>
-            MP fund allocation figures are real, sourced from the official MPLADS allocation list.
-            The 12-month utilization trend has no equivalent historical series in this dataset and
-            is illustrative, anchored to real current totals — every other figure above is computed
-            live from the same records shown elsewhere in this build.
-          </p>
-        </div>
-      </footer>
+      <SiteFooter
+        disclaimer="MP fund allocation figures are real, sourced from the official MPLADS allocation list. The 12-month utilization trend has no equivalent historical series in this dataset and is illustrative, anchored to real current totals — every other figure above is computed live from the same records shown elsewhere in this build."
+      />
     </main>
   );
 }

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { MpAllocationsList } from "@/components/mp-allocations-list";
 import { PersuadeNav } from "@/components/site/persuade-nav";
+import { SiteFooter } from "@/components/site/site-footer";
 
 /**
  * MP Fund Allocation list (data.md §1) — the real 543-MP dataset, rendered
@@ -70,6 +71,8 @@ export default async function MpAllocationsPage() {
           <MpAllocationsList mps={rows} states={states} />
         </div>
       </div>
+
+      <SiteFooter disclaimer="MP fund allocation figures are real, sourced from the official MPLADS allocation list." />
     </main>
   );
 }

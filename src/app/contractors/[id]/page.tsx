@@ -7,6 +7,7 @@ import { TrustStars } from "@/components/trust-stars";
 import { formatRupees, formatDate } from "@/lib/format";
 import { PROJECT_STAGE_LABELS, type ProjectStage } from "@/lib/enums";
 import { PersuadeNav } from "@/components/site/persuade-nav";
+import { SiteFooter } from "@/components/site/site-footer";
 
 /**
  * Contractor Public Profile (prd.md §4.1) — name, KYC badge, project
@@ -178,6 +179,8 @@ export default async function ContractorProfilePage({
           </section>
         )}
       </div>
+
+      <SiteFooter />
     </main>
   );
 }

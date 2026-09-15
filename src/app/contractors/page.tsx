@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { PersuadeNav } from "@/components/site/persuade-nav";
+import { SiteFooter } from "@/components/site/site-footer";
 import { ContractorCard, type ContractorCardData } from "@/components/contractor-card";
 
 /**
@@ -67,15 +68,9 @@ export default async function ContractorsPage() {
         )}
       </div>
 
-      <footer className="border-t border-ink-950/10 bg-ink-950">
-        <div className="mx-auto max-w-dashboard px-4 py-10 text-xs leading-relaxed text-paper/40 sm:px-6">
-          <p>
-            KYC status is illustrative for sample contractors and Trust
-            Scores are sample values — no verification or scoring model runs
-            live in this build.
-          </p>
-        </div>
-      </footer>
+      <SiteFooter
+        disclaimer="KYC status is illustrative for sample contractors and Trust Scores are sample values — no verification or scoring model runs live in this build."
+      />
     </main>
   );
 }

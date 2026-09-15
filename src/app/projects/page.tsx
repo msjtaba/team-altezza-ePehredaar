@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
 import { PersuadeNav } from "@/components/site/persuade-nav";
+import { SiteFooter } from "@/components/site/site-footer";
 import { ProjectFilters } from "@/components/project-filters";
 import { ProjectKpis } from "@/components/project-kpis";
 import { ProjectsGrid } from "@/components/projects-grid";
@@ -168,16 +169,9 @@ export default async function ProjectsPage({
         )}
       </div>
 
-      <footer className="border-t border-ink-950/10 bg-ink-950">
-        <div className="mx-auto max-w-dashboard px-4 py-10 text-xs leading-relaxed text-paper/40 sm:px-6">
-          <p>
-            MP fund allocation figures are real, sourced from the official
-            MPLADS allocation list. Alert scores and other sample fields
-            shown elsewhere in this prototype are illustrative — no
-            detection model runs live in this build.
-          </p>
-        </div>
-      </footer>
+      <SiteFooter
+        disclaimer="MP fund allocation figures are real, sourced from the official MPLADS allocation list. Alert scores and other sample fields shown elsewhere in this prototype are illustrative — no detection model runs live in this build."
+      />
     </main>
   );
 }
