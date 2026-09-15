@@ -5,6 +5,12 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { KycBadge } from "@/components/contractor/kyc-badge";
 
+// Vercel/serverless fix: this page/layout queries Prisma at render time,
+// which must never happen during Next's static-generation build step (no
+// working DATABASE_URL exists in that build container) — force per-request
+// rendering instead.
+export const dynamic = "force-dynamic";
+
 // prd.md §4.2 "Trust Score Visibility" — the contractor can see their own
 // real numeric Trust Score here; only the public profile renders it as
 // stars (see src/app/layout.tsx's public pages, out of scope for Phase 4).

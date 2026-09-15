@@ -2,6 +2,12 @@ import { prisma } from "@/lib/prisma";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/format";
 
+// Vercel/serverless fix: this page/layout queries Prisma at render time,
+// which must never happen during Next's static-generation build step (no
+// working DATABASE_URL exists in that build container) — force per-request
+// rendering instead.
+export const dynamic = "force-dynamic";
+
 const DECISION_LABELS: Record<string, string> = {
   approved_with_justification: "Approved",
   audit_initiated: "Audit Initiated",

@@ -9,6 +9,12 @@ import {
   statusLabel,
 } from "@/components/contractor/status-chip";
 
+// Vercel/serverless fix: this page/layout queries Prisma at render time,
+// which must never happen during Next's static-generation build step (no
+// working DATABASE_URL exists in that build container) — force per-request
+// rendering instead.
+export const dynamic = "force-dynamic";
+
 const MILESTONE_LABELS: Record<string, string> = {
   sanctioned: "Sanctioned",
   started: "Started",

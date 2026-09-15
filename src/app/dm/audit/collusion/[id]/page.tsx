@@ -5,6 +5,12 @@ import { prisma } from "@/lib/prisma";
 import { CollusionGraph, type CollusionNode, type CollusionEdgeView } from "@/components/dm/collusion-graph";
 import { COLLUSION_SHARED_ATTRIBUTES } from "@/lib/enums";
 
+// Vercel/serverless fix: this page/layout queries Prisma at render time,
+// which must never happen during Next's static-generation build step (no
+// working DATABASE_URL exists in that build container) — force per-request
+// rendering instead.
+export const dynamic = "force-dynamic";
+
 const ATTRIBUTE_LABELS: Record<(typeof COLLUSION_SHARED_ATTRIBUTES)[number], string> = {
   phone_number: "shared registered phone number",
   pan_prefix: "shared PAN prefix",

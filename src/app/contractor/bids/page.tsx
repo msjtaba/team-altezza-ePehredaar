@@ -11,6 +11,12 @@ import {
 } from "@/components/contractor/status-chip";
 import { placeBid } from "./actions";
 
+// Vercel/serverless fix: this page/layout queries Prisma at render time,
+// which must never happen during Next's static-generation build step (no
+// working DATABASE_URL exists in that build container) — force per-request
+// rendering instead.
+export const dynamic = "force-dynamic";
+
 const ERROR_MESSAGES: Record<string, string> = {
   verification_required: "Verification required to bid.",
   tender_closed: "That tender is no longer open.",

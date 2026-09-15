@@ -3,6 +3,12 @@ import { Badge } from "@/components/ui/badge";
 import { formatRupees, formatDate } from "@/lib/format";
 import { FundSankey, type SankeyLink, type SankeyNode } from "@/components/dm/fund-sankey";
 
+// Vercel/serverless fix: this page/layout queries Prisma at render time,
+// which must never happen during Next's static-generation build step (no
+// working DATABASE_URL exists in that build container) — force per-request
+// rendering instead.
+export const dynamic = "force-dynamic";
+
 /**
  * Fund Tracker (prd.md §4.4.6) — Ministry→State→District→Contractor Sankey
  * built from seeded FundFlow rows, plus the parked-funds aging table.

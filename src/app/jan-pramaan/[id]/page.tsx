@@ -4,6 +4,12 @@ import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import { prisma } from "@/lib/prisma";
 import { JanPramaanCapture } from "@/components/jan-pramaan-capture";
 
+// Vercel/serverless fix: this page/layout queries Prisma at render time,
+// which must never happen during Next's static-generation build step (no
+// working DATABASE_URL exists in that build container) — force per-request
+// rendering instead.
+export const dynamic = "force-dynamic";
+
 /**
  * Dedicated Jan-Pramaan surface (prd.md §4.3.1 desktop + §4.3.2 mobile-web),
  * one responsive route rather than two. Desktop is strictly read-only — no

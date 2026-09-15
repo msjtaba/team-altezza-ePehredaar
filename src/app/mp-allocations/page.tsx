@@ -3,6 +3,12 @@ import { MpAllocationsList } from "@/components/mp-allocations-list";
 import { PersuadeNav } from "@/components/site/persuade-nav";
 import { SiteFooter } from "@/components/site/site-footer";
 
+// Vercel/serverless fix: this page/layout queries Prisma at render time,
+// which must never happen during Next's static-generation build step (no
+// working DATABASE_URL exists in that build container) — force per-request
+// rendering instead.
+export const dynamic = "force-dynamic";
+
 /**
  * MP Fund Allocation list (data.md §1) — the real 543-MP dataset, rendered
  * as a searchable/filterable list per the explicit product requirement,

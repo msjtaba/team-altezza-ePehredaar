@@ -11,6 +11,12 @@ import { PersuadeNav } from "@/components/site/persuade-nav";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SatelliteMap } from "@/components/satellite-map";
 
+// Vercel/serverless fix: this page/layout queries Prisma at render time,
+// which must never happen during Next's static-generation build step (no
+// working DATABASE_URL exists in that build container) — force per-request
+// rendering instead.
+export const dynamic = "force-dynamic";
+
 /**
  * Individual Project Page (prd.md §4.1) — public, read-only. This URL
  * always resolves for any project (data.md §2: the page itself is fine to

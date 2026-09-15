@@ -9,6 +9,12 @@ import { PROJECT_STAGE_LABELS, type ProjectStage } from "@/lib/enums";
 import { PersuadeNav } from "@/components/site/persuade-nav";
 import { SiteFooter } from "@/components/site/site-footer";
 
+// Vercel/serverless fix: this page/layout queries Prisma at render time,
+// which must never happen during Next's static-generation build step (no
+// working DATABASE_URL exists in that build container) — force per-request
+// rendering instead.
+export const dynamic = "force-dynamic";
+
 /**
  * Contractor Public Profile (prd.md §4.1) — name, KYC badge, project
  * counts, star-rating Trust Score (never a raw number — design.md §3.4),

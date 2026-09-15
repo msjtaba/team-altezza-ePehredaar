@@ -3,6 +3,12 @@ import { PersuadeNav } from "@/components/site/persuade-nav";
 import { SiteFooter } from "@/components/site/site-footer";
 import { ContractorCard, type ContractorCardData } from "@/components/contractor-card";
 
+// Vercel/serverless fix: this page/layout queries Prisma at render time,
+// which must never happen during Next's static-generation build step (no
+// working DATABASE_URL exists in that build container) — force per-request
+// rendering instead.
+export const dynamic = "force-dynamic";
+
 /**
  * changes-3.md §7 — top-level Contractors index (sibling to the existing
  * /contractors/[id] detail view). Lists every contractor in the system as a

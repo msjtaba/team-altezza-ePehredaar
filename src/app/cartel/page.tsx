@@ -8,6 +8,12 @@ import {
   type CartelCluster,
 } from "@/components/cartel/cartel-graph";
 
+// Vercel/serverless fix: this page/layout queries Prisma at render time,
+// which must never happen during Next's static-generation build step (no
+// working DATABASE_URL exists in that build container) — force per-request
+// rendering instead.
+export const dynamic = "force-dynamic";
+
 /**
  * Cartel & Collusion Surveillance (changes-3.md §6/§6.1) — a new, bigger,
  * standalone public page, separate from the DM-only single-project

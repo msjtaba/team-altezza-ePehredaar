@@ -5,6 +5,12 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { DmNav } from "@/components/dm/dm-nav";
 
+// Vercel/serverless fix: this page/layout queries Prisma at render time,
+// which must never happen during Next's static-generation build step (no
+// working DATABASE_URL exists in that build container) — force per-request
+// rendering instead.
+export const dynamic = "force-dynamic";
+
 // design.md §1.1/§4.1/§7 — Operate-mode surface, the highest VISUAL_DENSITY
 // surface in the product (design.md §1 "a cockpit, not a gallery"). Overrides
 // the global Nunito/`font-body` default from src/app/layout.tsx, same pattern

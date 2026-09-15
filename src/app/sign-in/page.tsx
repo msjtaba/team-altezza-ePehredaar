@@ -2,6 +2,12 @@ import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
 import { SignInClient } from "./sign-in-client";
 
+// Vercel/serverless fix: this page/layout queries Prisma at render time,
+// which must never happen during Next's static-generation build step (no
+// working DATABASE_URL exists in that build container) — force per-request
+// rendering instead.
+export const dynamic = "force-dynamic";
+
 // Shared gateway into every authenticated surface (Contractor/DM/Ministry),
 // now restyled to the Persuade design language (changes-3.md §4) to match
 // /projects, /mp-allocations, /jan-pramaan — same paper/ink/marigold tokens

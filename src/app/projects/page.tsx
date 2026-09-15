@@ -8,6 +8,12 @@ import { ProjectsGrid } from "@/components/projects-grid";
 import { isStageCompletedOrLater } from "@/lib/enums";
 import type { DrawerProject } from "@/components/project-drawer";
 
+// Vercel/serverless fix: this page/layout queries Prisma at render time,
+// which must never happen during Next's static-generation build step (no
+// working DATABASE_URL exists in that build container) — force per-request
+// rendering instead.
+export const dynamic = "force-dynamic";
+
 /**
  * Projects tab (changes-1.md §4) — the old homepage's tender/project
  * listing, moved here. Order top-to-bottom per the spec: shrunk pull-quote,

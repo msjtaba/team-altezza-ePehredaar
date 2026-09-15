@@ -5,6 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { formatRupees, formatDate } from "@/lib/format";
 import { riskTierFromScore, type RiskTier } from "@/lib/enums";
 
+// Vercel/serverless fix: this page/layout queries Prisma at render time,
+// which must never happen during Next's static-generation build step (no
+// working DATABASE_URL exists in that build container) — force per-request
+// rendering instead.
+export const dynamic = "force-dynamic";
+
 // Alert statuses that mean "no longer needs DM attention" (brain.md §3 rule
 // 3 — every decision is logged, and a resolved alert carries that log).
 const RESOLVED_STATUSES = new Set(["approved", "rejected"]);

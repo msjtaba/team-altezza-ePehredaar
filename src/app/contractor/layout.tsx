@@ -5,6 +5,12 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { PortalNav } from "@/components/contractor/portal-nav";
 
+// Vercel/serverless fix: this page/layout queries Prisma at render time,
+// which must never happen during Next's static-generation build step (no
+// working DATABASE_URL exists in that build container) — force per-request
+// rendering instead.
+export const dynamic = "force-dynamic";
+
 // changes-6.md §1 — retheme onto the same Persuade system (paper/ink,
 // Nunito `font-body`, Anton `font-display`) used by every other page in the
 // app, so the authenticated Contractor Portal reads as the same site rather

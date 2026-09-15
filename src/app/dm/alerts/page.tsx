@@ -1,6 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { AlertsInboxClient, type InboxAlert } from "@/components/dm/alerts-inbox-client";
 
+// Vercel/serverless fix: this page/layout queries Prisma at render time,
+// which must never happen during Next's static-generation build step (no
+// working DATABASE_URL exists in that build container) — force per-request
+// rendering instead.
+export const dynamic = "force-dynamic";
+
 /**
  * DM Alerts Inbox (prd.md §4.4.2) — server component: fetch everything the
  * client tabs/filters need in one pass, shape it into a flat, serializable

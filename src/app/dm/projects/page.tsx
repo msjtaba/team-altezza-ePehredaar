@@ -2,6 +2,12 @@ import { prisma } from "@/lib/prisma";
 import { ProjectsTableClient } from "@/components/dm/projects-table-client";
 import { riskTierFromScore } from "@/lib/enums";
 
+// Vercel/serverless fix: this page/layout queries Prisma at render time,
+// which must never happen during Next's static-generation build step (no
+// working DATABASE_URL exists in that build container) — force per-request
+// rendering instead.
+export const dynamic = "force-dynamic";
+
 /**
  * DM Projects tab (prd.md §4.4.4) — all projects, filterable by status and
  * risk level, each linking through to /projects/[id] which now renders its
