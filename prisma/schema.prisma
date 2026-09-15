@@ -1,18 +1,20 @@
-// Prisma schema — mirrors trd.md §5 exactly, with two documented deviations:
+// Prisma schema — mirrors trd.md §5, with one remaining documented deviation:
 //
-// 1. Datasource is SQLite, not PostgreSQL/Supabase/Neon (trd.md §2). No
-//    hosted Postgres instance is available in this build environment.
-//    Every model/relation/field below is identical to what a Postgres
-//    schema would need — switching `provider` to "postgresql" and pointing
-//    DATABASE_URL at a real instance is the only change required later.
-//    Logged in tracker.md §3 decision area.
-// 2. SQLite has no native enum type, so trd.md's enum columns are modeled
-//    as `String` here, with allowed values documented in the comment above
-//    each field and enforced at the application boundary via
-//    `src/lib/enums.ts`. On Postgres these would become real Prisma enums.
+// 1. Datasource is PostgreSQL, provisioned via Vercel's Prisma Postgres
+//    marketplace integration for the deployed environment (local dev can
+//    still point DATABASE_URL at a local Postgres instance, or the schema
+//    can temporarily be flipped back to "sqlite" for a quick local-only
+//    run — see .env.example). Originally SQLite-only (no hosted Postgres
+//    was available); switched per the plan already logged in tracker.md §3.
+// 2. Enum columns are still modeled as `String` rather than native Prisma
+//    enums, with allowed values documented in the comment above each field
+//    and enforced at the application boundary via `src/lib/enums.ts` — kept
+//    as-is across the SQLite→Postgres switch to minimize migration risk;
+//    converting to real enums remains a follow-up, not required for
+//    correctness.
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
