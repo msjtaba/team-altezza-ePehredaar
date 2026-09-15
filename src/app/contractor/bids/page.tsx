@@ -26,6 +26,7 @@ export default async function MyBidsPage({
 }) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) redirect("/sign-in?callbackUrl=/contractor/bids");
+  if (session.user.role !== "contractor") redirect("/sign-in?callbackUrl=/contractor/bids");
 
   const contractor = await prisma.contractor.findUnique({
     where: { userId: session.user.id },
@@ -51,8 +52,8 @@ export default async function MyBidsPage({
   return (
     <div className="flex flex-col gap-10">
       <div>
-        <h1 className="text-3xl font-semibold text-navy-950">My Bids</h1>
-        <p className="mt-1 text-sm text-slate-600">
+        <h1 className="font-display text-2xl tracking-tight text-ink-950 sm:text-3xl">My Bids</h1>
+        <p className="mt-1 text-sm text-ink-950/60">
           Track every bid you&apos;ve submitted, and place new ones on open tenders.
         </p>
       </div>
@@ -69,15 +70,15 @@ export default async function MyBidsPage({
       )}
 
       <section>
-        <h2 className="text-xl font-semibold text-navy-950">Submitted bids</h2>
+        <h2 className="font-display text-lg tracking-wide text-ink-950">Submitted bids</h2>
         {bids.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-500">
+          <p className="mt-3 text-sm text-ink-950/50">
             You haven&apos;t placed any bids yet.
           </p>
         ) : (
-          <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200 bg-white">
+          <div className="mt-4 overflow-x-auto rounded-lg border border-ink-950/10 bg-paper-2">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <thead className="border-b border-ink-950/10 bg-ink-950/[0.03] text-xs uppercase tracking-wide text-ink-950/50">
                 <tr>
                   <th className="px-4 py-3 font-medium">Project</th>
                   <th className="px-4 py-3 font-medium">Price Quote</th>
@@ -88,15 +89,15 @@ export default async function MyBidsPage({
               </thead>
               <tbody>
                 {bids.map((bid) => (
-                  <tr key={bid.id} className="border-b border-slate-100 last:border-0">
-                    <td className="px-4 py-3 text-navy-950">{bid.tender.project.title}</td>
-                    <td className="px-4 py-3 font-mono tabular-nums text-slate-700">
+                  <tr key={bid.id} className="border-b border-ink-950/10 last:border-0">
+                    <td className="px-4 py-3 text-ink-950">{bid.tender.project.title}</td>
+                    <td className="px-4 py-3 font-mono tabular-nums text-ink-950/70">
                       ₹{Number(bid.priceQuote).toLocaleString("en-IN")}
                     </td>
-                    <td className="px-4 py-3 font-mono tabular-nums text-slate-700">
+                    <td className="px-4 py-3 font-mono tabular-nums text-ink-950/70">
                       {bid.proposedTimelineDays} days
                     </td>
-                    <td className="px-4 py-3 text-slate-500">
+                    <td className="px-4 py-3 text-ink-950/50">
                       {bid.submittedAt.toLocaleDateString("en-IN")}
                     </td>
                     <td className="px-4 py-3">
@@ -111,9 +112,9 @@ export default async function MyBidsPage({
       </section>
 
       <section>
-        <h2 className="text-xl font-semibold text-navy-950">Open tenders</h2>
+        <h2 className="font-display text-lg tracking-wide text-ink-950">Open tenders</h2>
         {openTenders.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-500">
+          <p className="mt-3 text-sm text-ink-950/50">
             No open tenders available to bid on right now.
           </p>
         ) : (
@@ -121,14 +122,14 @@ export default async function MyBidsPage({
             {openTenders.map((tender) => (
               <div
                 key={tender.id}
-                className="rounded-lg border border-slate-200 bg-white p-5"
+                className="rounded-lg border border-ink-950/10 bg-paper-2 p-5"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <h3 className="text-base font-semibold text-navy-950">
+                    <h3 className="text-base font-medium text-ink-950">
                       {tender.project.title}
                     </h3>
-                    <p className="mt-0.5 text-xs text-slate-500">
+                    <p className="mt-0.5 text-xs text-ink-950/50">
                       Sanctioned amount{" "}
                       <span className="font-mono tabular-nums">
                         ₹{Number(tender.project.sanctionedAmount).toLocaleString("en-IN")}
@@ -147,7 +148,7 @@ export default async function MyBidsPage({
                     <div className="flex flex-col gap-1.5">
                       <label
                         htmlFor={`price-${tender.id}`}
-                        className="text-sm font-medium text-slate-700"
+                        className="text-sm font-medium text-ink-950/70"
                       >
                         Price quote (₹)
                       </label>
@@ -158,13 +159,13 @@ export default async function MyBidsPage({
                         min="1"
                         step="1"
                         required
-                        className="rounded-md border border-slate-300 px-3 py-2 text-sm font-mono tabular-nums text-navy-950 outline-none focus:border-navy-700 focus:ring-2 focus:ring-navy-700/20"
+                        className="rounded-md border border-ink-950/15 bg-paper px-3 py-2 text-sm font-mono tabular-nums text-ink-950 outline-none focus-visible:ring-2 focus-visible:ring-marigold-600"
                       />
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <label
                         htmlFor={`timeline-${tender.id}`}
-                        className="text-sm font-medium text-slate-700"
+                        className="text-sm font-medium text-ink-950/70"
                       >
                         Proposed timeline (days)
                       </label>
@@ -175,13 +176,13 @@ export default async function MyBidsPage({
                         min="1"
                         step="1"
                         required
-                        className="rounded-md border border-slate-300 px-3 py-2 text-sm font-mono tabular-nums text-navy-950 outline-none focus:border-navy-700 focus:ring-2 focus:ring-navy-700/20"
+                        className="rounded-md border border-ink-950/15 bg-paper px-3 py-2 text-sm font-mono tabular-nums text-ink-950 outline-none focus-visible:ring-2 focus-visible:ring-marigold-600"
                       />
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <label
                         htmlFor={`docs-${tender.id}`}
-                        className="text-sm font-medium text-slate-700"
+                        className="text-sm font-medium text-ink-950/70"
                       >
                         Supporting docs (URL)
                       </label>
@@ -190,21 +191,21 @@ export default async function MyBidsPage({
                         name="supportingDocsUrl"
                         type="text"
                         placeholder="/docs/my-bid-proposal.pdf"
-                        className="rounded-md border border-slate-300 px-3 py-2 text-sm text-navy-950 outline-none focus:border-navy-700 focus:ring-2 focus:ring-navy-700/20"
+                        className="rounded-md border border-ink-950/15 bg-paper px-3 py-2 text-sm text-ink-950 outline-none focus-visible:ring-2 focus-visible:ring-marigold-600"
                       />
                     </div>
                     <div className="sm:col-span-3">
-                      <Button type="submit" variant="primary">
+                      <Button type="submit" variant="marigold">
                         Place Bid
                       </Button>
                     </div>
                   </form>
                 ) : (
-                  <div className="mt-4 flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-4 py-3">
-                    <p className="text-sm text-slate-600">
+                  <div className="mt-4 flex items-center justify-between rounded-md border border-ink-950/10 bg-ink-950/[0.03] px-4 py-3">
+                    <p className="text-sm text-ink-950/60">
                       Verification required to bid.
                     </p>
-                    <Button type="button" variant="secondary" disabled>
+                    <Button type="button" variant="outline-paper" disabled>
                       Place Bid
                     </Button>
                   </div>

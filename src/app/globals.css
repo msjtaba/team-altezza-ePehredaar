@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* OpenLayers base styles (trd.md §2) — needed by src/components/satellite-map.tsx. */
+@import "ol/ol.css";
+
 /*
   design.md §3 — two token surfaces:
   - Persuade (public site): warm ink/paper, set as the page default below.
@@ -10,8 +13,7 @@
     Phase 4-6) — intentionally not the global default.
 */
 body {
-  background: theme("colors.paper.DEFAULT");
-  color: theme("colors.ink.950");
+  @apply bg-paper text-ink-950;
   font-feature-settings: "cv11", "ss01";
 }
 
@@ -33,6 +35,15 @@ body {
 }
 
 /* design.md §6.3 — prefers-reduced-motion is mandatory, no exceptions. */
+/* Untitled UI React's theme.css includes this Recharts override (changes-2.md
+   §1) — outlines on chart surfaces read as a stray focus ring, not a real
+   interactive affordance. */
+.recharts-surface,
+.recharts-surface g,
+.recharts-surface path {
+  outline: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -10,10 +10,13 @@ import { DmNav } from "@/components/dm/dm-nav";
 // the global Nunito/`font-body` default from src/app/layout.tsx, same pattern
 // as src/app/contractor/layout.tsx and src/app/ministry/layout.tsx.
 // src/middleware.ts already gates /dm/* to authenticated dm-role sessions;
-// this redirect is a defensive fallback only.
+// this redirect is a defensive fallback only — but it must independently
+// re-check the role too (changes-4.md §4), not just that a session exists,
+// since every route/action under /dm/* is expected to reject the wrong
+// role server-side on its own rather than lean entirely on the middleware.
 export default async function DmLayout({ children }: { children: ReactNode }) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  if (!session?.user?.id || (session.user.role !== "dm" && session.user.role !== "admin")) {
     redirect("/sign-in?callbackUrl=/dm");
   }
 
@@ -23,7 +26,7 @@ export default async function DmLayout({ children }: { children: ReactNode }) {
   });
 
   return (
-    <div className="font-sans bg-slate-50 text-slate-700 min-h-[100dvh]">
+    <div className="font-body bg-paper text-ink-950/80 min-h-[100dvh]">
       <DmNav name={dmUser?.name ?? session.user.name ?? "District Magistrate"} district={dmUser?.district?.name ?? null} />
       <main className="mx-auto max-w-dashboard px-6 py-8">{children}</main>
     </div>

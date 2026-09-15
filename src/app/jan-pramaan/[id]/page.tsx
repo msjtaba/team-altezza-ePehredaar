@@ -3,8 +3,6 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import { prisma } from "@/lib/prisma";
 import { JanPramaanCapture } from "@/components/jan-pramaan-capture";
-import { JanPramaanQr } from "@/components/jan-pramaan-qr";
-import { isStageCompletedOrLater } from "@/lib/enums";
 
 /**
  * Dedicated Jan-Pramaan surface (prd.md §4.3.1 desktop + §4.3.2 mobile-web),
@@ -42,9 +40,6 @@ export default async function JanPramaanPage({
     disputed: { label: "⚠️ Under Dispute", tone: "bg-flagged-tint text-flagged" },
   };
   const c = statusCopy[status];
-
-  const showQr = isStageCompletedOrLater(project.status);
-  const siteUrl = `/jan-pramaan/${project.id}`;
 
   return (
     <main className="min-h-[100dvh] bg-paper font-body">
@@ -113,15 +108,8 @@ export default async function JanPramaanPage({
         </div>
 
         <div className="mt-8 hidden rounded-lg border border-dashed border-ink-950/15 p-5 text-sm text-ink-950/50 md:block">
-          Verification is a mobile-only action — open this page on your phone at the project site to
-          submit a citizen verification.
+          Please use your mobile device to access this feature.
         </div>
-
-        {showQr && (
-          <div className="mt-10 flex justify-center md:justify-start">
-            <JanPramaanQr url={siteUrl} />
-          </div>
-        )}
       </div>
     </main>
   );

@@ -22,11 +22,11 @@ export function DmNav({ name, district }: { name: string; district: string | nul
   const pathname = usePathname();
 
   return (
-    <header className="border-b border-slate-200 bg-white">
+    <header className="sticky top-0 z-50 border-b border-ink-950/10 bg-paper/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-dashboard flex-wrap items-center justify-between gap-4 px-6 py-3">
         <div className="flex flex-wrap items-center gap-6">
-          <Link href="/dm" className="text-base font-semibold text-navy-950">
-            MPLADS Watchdog <span className="font-normal text-slate-400">· DM Dashboard</span>
+          <Link href="/dm" className="font-display text-base tracking-wide text-ink-950">
+            ePehredaar <span className="font-body text-sm font-normal text-ink-950/40">· DM Dashboard</span>
           </Link>
           <nav className="flex flex-wrap items-center gap-1">
             {links.map((l) => {
@@ -37,8 +37,8 @@ export function DmNav({ name, district }: { name: string; district: string | nul
                   href={l.href}
                   className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-150 ${
                     active
-                      ? "bg-navy-100 text-navy-900"
-                      : "text-slate-600 hover:bg-navy-50 hover:text-navy-900"
+                      ? "bg-marigold-100 text-marigold-600"
+                      : "text-ink-950/60 hover:bg-paper-2 hover:text-marigold-600"
                   }`}
                 >
                   {l.label}
@@ -49,14 +49,14 @@ export function DmNav({ name, district }: { name: string; district: string | nul
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <p className="text-sm font-medium text-navy-950">{name}</p>
-            <p className="mt-0.5 text-xs text-slate-500">
+            <p className="text-sm font-medium text-ink-950">{name}</p>
+            <p className="mt-0.5 text-xs text-ink-950/50">
               District Magistrate{district ? ` · ${district}` : ""}
             </p>
           </div>
           <button
             onClick={() => signOut({ callbackUrl: "/sign-in" })}
-            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors duration-150 hover:bg-slate-100"
+            className="rounded-md border border-ink-950/15 bg-paper px-3 py-1.5 text-sm font-medium text-ink-950/70 transition-colors duration-150 hover:bg-paper-2"
           >
             Sign out
           </button>

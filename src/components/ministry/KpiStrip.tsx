@@ -1,9 +1,12 @@
 import Link from "next/link";
-import { WarningCircle, TrendUp, TrendDown } from "@phosphor-icons/react/dist/ssr";
+import { WarningCircle } from "@phosphor-icons/react/dist/ssr";
+import { MetricCard } from "@/components/untitled-ui/metric-card";
 
 // design.md §1.1 / §7 — Operate KPI cards: navy accent only, risk color
 // reserved for the one card that is genuinely a risk signal (Active
 // High-Risk Alerts). Figures are font-mono tabular-nums throughout.
+// Restyled onto the Untitled UI React metric/stat card pattern
+// (changes-2.md §1/§2) — same data wiring, new component shell.
 
 function formatCr(amountInRupees: number): string {
   const cr = amountInRupees / 1e7;
@@ -35,90 +38,53 @@ export function KpiStrip({
 }) {
   return (
     <section aria-label="National KPI summary" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-      <KpiCard
-        label="Real MP Fund Allocation (National)"
-        value={formatCr(realMpAllocationTotal)}
-        sub={`Across 543 MPs — source-verified${realMpMissingCount ? `, ${realMpMissingCount} record${realMpMissingCount > 1 ? "s" : ""} unavailable` : ""}`}
-        trend="up"
-      />
-      <KpiCard
+      {/* Allocated Limit for Hon'ble MPs — clickable through to the MP
+          Allocation page (changes-2.md §2's confirmed card). */}
+      <Link
+        href="/mp-allocations"
+        className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+      >
+        <MetricCard
+          label="Allocated Limit for Hon'ble MPs"
+          value={formatCr(realMpAllocationTotal)}
+          sub={`Across 543 MPs — source-verified${realMpMissingCount ? `, ${realMpMissingCount} record${realMpMissingCount > 1 ? "s" : ""} unavailable` : ""}. Click for the full MP Allocation view.`}
+          trend="up"
+          trendLabel="verified"
+          interactive
+        />
+      </Link>
+      <MetricCard
         label="Monitored Projects Sanctioned"
         value={formatCr(monitoredSanctioned)}
         sub="Prototype project set (real + illustrative)"
       />
-      <KpiCard
+      <MetricCard
         label="Fund Utilization"
         value={`${utilizationPct.toFixed(1)}%`}
         sub="Billed vs. sanctioned, monitored projects"
       />
-      <KpiCard
+      <MetricCard
         label="Parked / Unspent Funds"
         value={formatCr(parkedTotal)}
         sub={parkedThresholdBreached ? "Above ₹10L review threshold" : "Within normal range"}
-        emphasis={parkedThresholdBreached ? "watch" : undefined}
+        tone={parkedThresholdBreached ? "warning" : "default"}
       />
-      <Link href="#risk-rankings" className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700 rounded-lg">
-        <KpiCard
+      <Link href="#risk-rankings" className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
+        <MetricCard
           label="Active High-Risk Alerts"
           value={String(flaggedAlertCount)}
           sub="Risk score ≥ 70 — click to view rankings"
-          emphasis={flaggedAlertCount > 0 ? "flagged" : undefined}
+          tone={flaggedAlertCount > 0 ? "error" : "default"}
           icon={<WarningCircle size={18} weight="fill" />}
           interactive
         />
       </Link>
-      <KpiCard
+      <MetricCard
         label="Completed vs. Delayed"
         value={`${completedCount} / ${delayedCount}`}
         sub={`${inProgressCount} in progress · delayed = in-progress, sanctioned >180d ago (prototype heuristic)`}
-        wide
+        className="sm:col-span-2 lg:col-span-1"
       />
     </section>
-  );
-}
-
-function KpiCard({
-  label,
-  value,
-  sub,
-  emphasis,
-  icon,
-  interactive,
-  trend,
-  wide,
-}: {
-  label: string;
-  value: string;
-  sub: string;
-  emphasis?: "watch" | "flagged";
-  icon?: React.ReactNode;
-  interactive?: boolean;
-  trend?: "up" | "down";
-  wide?: boolean;
-}) {
-  const emphasisClasses =
-    emphasis === "flagged"
-      ? "border-flagged/30 bg-flagged-tint/40"
-      : emphasis === "watch"
-        ? "border-watch/30 bg-watch-tint/40"
-        : "border-slate-200 bg-white";
-
-  return (
-    <div
-      className={`rounded-lg border p-4 ${emphasisClasses} ${wide ? "sm:col-span-2 lg:col-span-1" : ""} ${
-        interactive ? "transition-colors duration-150 hover:border-navy-300 h-full" : ""
-      }`}
-    >
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-        {icon && (
-          <span className={emphasis === "flagged" ? "text-flagged" : "text-slate-400"}>{icon}</span>
-        )}
-        {trend === "up" && <TrendUp size={16} weight="bold" className="text-navy-700" />}
-        {trend === "down" && <TrendDown size={16} weight="bold" className="text-slate-400" />}
-      </div>
-      <p className="mt-1.5 font-mono tabular-nums text-2xl font-semibold text-navy-950">{value}</p>
-      <p className="mt-1 text-xs leading-snug text-slate-500">{sub}</p>
-    </div>
   );
 }

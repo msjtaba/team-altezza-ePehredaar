@@ -16,6 +16,12 @@ export async function placeBid(tenderId: string, formData: FormData) {
   if (!session?.user?.id) {
     redirect("/sign-in?callbackUrl=/contractor/bids");
   }
+  // changes-4.md §4 authorization audit — server actions re-check the role
+  // independently rather than relying solely on the route-level middleware
+  // gate (server actions are invoked as a direct POST, not a page render).
+  if (session.user.role !== "contractor") {
+    redirect("/sign-in?callbackUrl=/contractor/bids");
+  }
 
   const contractor = await prisma.contractor.findUnique({
     where: { userId: session.user.id },

@@ -1,6 +1,8 @@
 "use client";
 
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { ChartCard } from "@/components/untitled-ui/chart-card";
+import { UuiBadge } from "@/components/untitled-ui/badge";
 
 export type AlertBreakdownPoint = {
   category: string;
@@ -16,13 +18,12 @@ const NAVY_SHADES = ["#10233F", "#1E3A5F", "#3E5C82", "#8CA3BE"];
 export function AlertBreakdownChart({ data }: { data: AlertBreakdownPoint[] }) {
   const total = data.reduce((sum, d) => sum + d.count, 0);
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4">
-      <div className="flex items-baseline justify-between">
-        <h3 className="text-sm font-semibold text-navy-950">Alert Breakdown by Type</h3>
-        <span className="text-[11px] font-medium text-slate-400">Real — {total} seeded alerts</span>
-      </div>
-      <p className="mt-1 text-xs text-slate-500">Grouped from the 11 seeded alert records by category.</p>
-      <div className="mt-3 h-64">
+    <ChartCard
+      title="Alert Breakdown by Type"
+      description="Grouped from the 11 seeded alert records by category."
+      action={<UuiBadge color="brand">Real — {total} seeded alerts</UuiBadge>}
+    >
+      <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -42,6 +43,6 @@ export function AlertBreakdownChart({ data }: { data: AlertBreakdownPoint[] }) {
           </PieChart>
         </ResponsiveContainer>
       </div>
-    </div>
+    </ChartCard>
   );
 }

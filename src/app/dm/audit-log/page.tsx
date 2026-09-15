@@ -40,16 +40,16 @@ export default async function AuditLogPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-3xl font-semibold text-navy-950">Approvals / Audit Log</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <h1 className="font-display text-3xl tracking-tight text-ink-950">Approvals / Audit Log</h1>
+        <p className="mt-1 text-sm text-ink-950/60">
           <span className="font-mono tabular-nums">{resolvedCount}</span> decisions recorded ·{" "}
           <span className="font-mono tabular-nums">{auditCount}</span> under audit.
         </p>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+      <div className="overflow-x-auto rounded-lg border border-ink-950/10 bg-paper-2">
         <table className="w-full min-w-[900px] text-sm">
-          <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+          <thead className="bg-ink-950/5 text-left text-xs uppercase tracking-wide text-ink-950/50">
             <tr>
               <th className="px-4 py-3">Project</th>
               <th className="px-4 py-3">Alert Type</th>
@@ -59,23 +59,23 @@ export default async function AuditLogPage() {
               <th className="px-4 py-3">Timestamp</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-ink-950/10">
             {actions.map((a) => (
-              <tr key={a.id} className="hover:bg-slate-50">
-                <td className="px-4 py-3 font-medium text-navy-950">{a.alert.project?.title ?? "—"}</td>
-                <td className="px-4 py-3 text-slate-600">{a.alert.type.replace(/_/g, " ")}</td>
+              <tr key={a.id} className="hover:bg-ink-950/5">
+                <td className="px-4 py-3 font-medium text-ink-950">{a.alert.project?.title ?? "—"}</td>
+                <td className="px-4 py-3 text-ink-950/70">{a.alert.type.replace(/_/g, " ")}</td>
                 <td className="px-4 py-3">
                   <Badge tier={decisionTier(a.decision)}>{DECISION_LABELS[a.decision] ?? a.decision}</Badge>
                 </td>
-                <td className="px-4 py-3 max-w-xs text-slate-600">{a.justificationNote}</td>
-                <td className="px-4 py-3 text-slate-600">{a.dm.name}</td>
-                <td className="px-4 py-3 font-mono tabular-nums text-slate-500">{formatDate(a.createdAt)}</td>
+                <td className="px-4 py-3 max-w-xs text-ink-950/70">{a.justificationNote}</td>
+                <td className="px-4 py-3 text-ink-950/70">{a.dm.name}</td>
+                <td className="px-4 py-3 font-mono tabular-nums text-ink-950/50">{formatDate(a.createdAt)}</td>
               </tr>
             ))}
           </tbody>
         </table>
         {actions.length === 0 && (
-          <p className="p-10 text-center text-sm text-slate-400">No decisions recorded yet.</p>
+          <p className="p-10 text-center text-sm text-ink-950/40">No decisions recorded yet.</p>
         )}
       </div>
     </div>

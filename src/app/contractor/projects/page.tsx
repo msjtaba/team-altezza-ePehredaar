@@ -24,6 +24,7 @@ const MILESTONE_LABELS: Record<string, string> = {
 export default async function MyProjectsPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) redirect("/sign-in?callbackUrl=/contractor/projects");
+  if (session.user.role !== "contractor") redirect("/sign-in?callbackUrl=/contractor/projects");
 
   const contractor = await prisma.contractor.findUnique({
     where: { userId: session.user.id },
@@ -42,15 +43,15 @@ export default async function MyProjectsPage() {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="text-3xl font-semibold text-navy-950">My Projects</h1>
-        <p className="mt-1 text-sm text-slate-600">
+        <h1 className="font-display text-2xl tracking-tight text-ink-950 sm:text-3xl">My Projects</h1>
+        <p className="mt-1 text-sm text-ink-950/60">
           Awarded, in-progress, and completed projects, with the milestone
           tracker and per-milestone payment status.
         </p>
       </div>
 
       {projects.length === 0 ? (
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-ink-950/50">
           No projects have been assigned to you yet.
         </p>
       ) : (
@@ -65,14 +66,14 @@ export default async function MyProjectsPage() {
             return (
               <div
                 key={project.id}
-                className="rounded-lg border border-slate-200 bg-white p-6"
+                className="rounded-lg border border-ink-950/10 bg-paper-2 p-6"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <h2 className="text-lg font-semibold text-navy-950">
+                    <h2 className="text-lg font-medium text-ink-950">
                       {project.title}
                     </h2>
-                    <p className="mt-0.5 text-xs text-slate-500">
+                    <p className="mt-0.5 text-xs text-ink-950/50">
                       {project.district.name}, {project.district.state} ·{" "}
                       Sanctioned{" "}
                       <span className="font-mono tabular-nums">
@@ -93,25 +94,25 @@ export default async function MyProjectsPage() {
                     return (
                       <li
                         key={name}
-                        className={`flex min-w-[150px] flex-1 flex-col gap-2 rounded-md border px-3 py-2.5 transition-colors duration-150 ${
+                        className={`flex min-w-[150px] flex-1 flex-col gap-2 rounded-md border px-3 py-2.5 transition-colors duration-[250ms] ${
                           isReached
-                            ? "border-navy-200 bg-navy-50"
-                            : "border-slate-200 bg-slate-50"
+                            ? "border-marigold-600/30 bg-marigold-100"
+                            : "border-ink-950/10 bg-ink-950/[0.03]"
                         }`}
                       >
                         <div className="flex items-center gap-2">
                           <span
                             className={`flex h-5 w-5 items-center justify-center rounded-full font-mono text-[10px] font-semibold ${
                               isReached
-                                ? "bg-navy-700 text-white"
-                                : "bg-slate-300 text-white"
+                                ? "bg-marigold-600 text-ink-950"
+                                : "bg-ink-950/20 text-paper"
                             }`}
                           >
                             {i + 1}
                           </span>
                           <span
                             className={`text-xs font-medium ${
-                              isReached ? "text-navy-950" : "text-slate-500"
+                              isReached ? "text-ink-950" : "text-ink-950/50"
                             }`}
                           >
                             {MILESTONE_LABELS[name]}
@@ -123,7 +124,7 @@ export default async function MyProjectsPage() {
                             tone={paymentStatusTone(milestone.paymentStatus)}
                           />
                         ) : (
-                          <span className="text-[11px] text-slate-400">Not yet reached</span>
+                          <span className="text-[11px] text-ink-950/40">Not yet reached</span>
                         )}
                       </li>
                     );

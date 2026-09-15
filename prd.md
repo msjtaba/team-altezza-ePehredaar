@@ -97,7 +97,7 @@ This PRD describes a **static/functional prototype**, not a production system. T
 
 **4.3.1 Jan-Pramaan — Public Website (Desktop)**
 - A verification status banner on each project: "Awaiting Citizen Verification" / "✅ Citizen-Verified" / "⚠️ Under Dispute."
-- A consensus meter showing only the aggregate result — submission count plus thumbs-up/down split (e.g., "5 submitted — 👍 4 👎 1"). No photo gallery or individual review detail is ever shown publicly; that data is DM-only.
+- A consensus meter showing only the aggregate result — submission count plus thumbs-up/down split (e.g., "5 submitted — 👍 4 👎 1"). No photo gallery or individual review detail is ever shown publicly, and none is ever shown to the DM either (see §4.3.4) — that data only ever feeds the ML detection model.
 - Desktop is read-only — there is no capture/submission action here.
 
 **4.3.2 Jan-Pramaan — Mobile Web**
@@ -113,12 +113,10 @@ This PRD describes a **static/functional prototype**, not a production system. T
 - **Notifications tab:** alerts when a citizen's submission is counted toward consensus, and alerts about new nearby projects awaiting verification.
 - **Offline Queue Indicator:** a persistent banner showing any submissions still waiting to sync.
 
-**4.3.4 Jan-Pramaan — DM Review Inbox (private)**
-- Full photo gallery for each project (never shown publicly).
-- Per photo: device and server timestamps, GPS deviation from the sanctioned site, mock-location flag, thumbs up/down, an anonymized citizen ID, and a duplicate-image (pHash) check result.
-- A side-by-side comparison view of contractor-submitted photos versus citizen-submitted photos.
-- A satellite map overlay comparing the sanctioned site pin against the GPS pins of submitted photos.
-- Available actions: **Approve / Reject / Request Physical Audit**, each requiring a written justification note.
+**4.3.4 Jan-Pramaan — DM Review (private)**
+- Citizen-submitted Jan-Pramaan photos are never shown to the DM directly, and never as a browsable gallery, anywhere in the app. Each submitted photo is instead fed to the ML detection model (the same one assumed throughout this document — cost-anomaly, GPS/duplicate/timestamp checks, etc.).
+- The model's output — not the raw photo — is what reaches the DM, surfaced as alerts in the Alerts Inbox → Jan-Pramaan tab (§4.4.2, Tab C), sub-filterable by Pending Review / Negative Consensus Reached / Mock-Location Flagged. This is the *only* Jan-Pramaan surface the DM sees.
+- Available actions on those alerts: **Approve / Reject / Request Physical Audit**, each requiring a written justification note. Approving a Jan-Pramaan alert is also the trigger that releases payment for the project's relevant milestone (the prototype's simulated "Smart Escrow" release — see §4.4.2).
 
 **4.3.5 Rules governing Jan-Pramaan (apply across all surfaces)**
 - The site QR code is only generated/made available **after** the contractor marks the project 100% Complete.
@@ -152,7 +150,7 @@ This PRD describes a **static/functional prototype**, not a production system. T
 
 **4.4.4 Projects Tab**
 - All projects within the DM's jurisdiction, filterable by status and risk level.
-- Clicking through leads to the same detail structure shown publicly, plus DM-only sections (the Jan-Pramaan photo gallery and the full alert history for that project).
+- Clicking through leads to the same detail structure shown publicly, plus DM-only sections (the project's Jan-Pramaan-related alert history and the full alert history for that project).
 
 **4.4.5 Contractors Tab**
 - A list of vendors, sortable by Trust Score.

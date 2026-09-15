@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ComposableMap, Geographies, Geography } from "react-simple-maps";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/untitled-ui/card";
 import type { RiskTier } from "@/lib/enums";
 
 export type StateStat = {
@@ -100,12 +101,17 @@ export function IndiaMap({ stats }: { stats: StateStat[] }) {
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.3fr_1fr]">
-      <div className="rounded-lg border border-slate-200 bg-white p-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-navy-950">
-            Fund Utilization by State
-          </h3>
-          <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+      <Card>
+        <CardHeader className="flex-row items-center justify-between gap-3">
+          <div>
+            <CardTitle>Fund Utilization by State</CardTitle>
+            <CardDescription>
+              Shaded by billed-vs-sanctioned utilization on monitored projects. Click a state for
+              detail — grey states have real MP allocation on record but no monitored project in
+              this prototype&apos;s seed data.
+            </CardDescription>
+          </div>
+          <div className="flex shrink-0 items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
             <span>Low</span>
             <span className="h-2.5 w-4 rounded-md bg-navy-100" />
             <span className="h-2.5 w-4 rounded-md bg-navy-300" />
@@ -114,13 +120,8 @@ export function IndiaMap({ stats }: { stats: StateStat[] }) {
             <span className="h-2.5 w-4 rounded-md bg-navy-900" />
             <span>High</span>
           </div>
-        </div>
-        <p className="mt-1 text-xs text-slate-500">
-          Shaded by billed-vs-sanctioned utilization on monitored projects. Click a state for
-          detail — grey states have real MP allocation on record but no monitored project in
-          this prototype&apos;s seed data.
-        </p>
-
+        </CardHeader>
+        <CardContent>
         {!mapFailed ? (
           <div className="mt-3 aspect-[4/3] w-full">
             <ComposableMap
@@ -163,35 +164,39 @@ export function IndiaMap({ stats }: { stats: StateStat[] }) {
         {!mapReady && !mapFailed && (
           <p className="mt-2 text-xs text-slate-400">Loading map…</p>
         )}
-      </div>
+        </CardContent>
+      </Card>
 
-      <div className="rounded-lg border border-slate-200 bg-white p-4">
-        <h3 className="text-sm font-semibold text-navy-950">State Drill-Down</h3>
-        <p className="mt-1 text-xs text-slate-500">
-          {selected ? "Selected state detail:" : "Select a state on the map, or a row below."}
-        </p>
+      <Card>
+        <CardHeader>
+          <CardTitle>State Drill-Down</CardTitle>
+          <CardDescription>
+            {selected ? "Selected state detail:" : "Select a state on the map, or a row below."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
 
         {selected && (
-          <div className="mt-3 rounded-md border border-navy-100 bg-navy-50 p-3">
+          <div className="mt-1 rounded-md border border-navy-100 bg-navy-50 p-3 dark:border-navy-900 dark:bg-navy-950/30">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-navy-950">{selected.state}</p>
               {selected.riskTier && <Badge tier={selected.riskTier}>{selected.maxRiskScore}%</Badge>}
             </div>
             <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
               <dt className="text-slate-500">Real MP allocation</dt>
-              <dd className="text-right font-mono tabular-nums text-slate-800">
+              <dd className="text-right font-mono tabular-nums text-slate-800 dark:text-slate-200">
                 {formatCr(selected.mpAllocatedTotal)}
               </dd>
               <dt className="text-slate-500">Sanctioned (monitored)</dt>
-              <dd className="text-right font-mono tabular-nums text-slate-800">
+              <dd className="text-right font-mono tabular-nums text-slate-800 dark:text-slate-200">
                 {selected.hasProjectData ? formatCr(selected.projectSanctioned) : "—"}
               </dd>
               <dt className="text-slate-500">Utilized (monitored)</dt>
-              <dd className="text-right font-mono tabular-nums text-slate-800">
+              <dd className="text-right font-mono tabular-nums text-slate-800 dark:text-slate-200">
                 {selected.hasProjectData ? formatCr(selected.projectBilled) : "—"}
               </dd>
               <dt className="text-slate-500">Alerts</dt>
-              <dd className="text-right font-mono tabular-nums text-slate-800">
+              <dd className="text-right font-mono tabular-nums text-slate-800 dark:text-slate-200">
                 {selected.alertCount}
               </dd>
             </dl>
@@ -201,7 +206,7 @@ export function IndiaMap({ stats }: { stats: StateStat[] }) {
         <div className="mt-3 max-h-72 overflow-y-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-200 text-slate-500">
+              <tr className="border-b border-slate-200 text-slate-500 dark:border-slate-700 dark:text-slate-400">
                 <th className="py-1.5 font-medium">State</th>
                 <th className="py-1.5 text-right font-medium">MP Alloc.</th>
                 <th className="py-1.5 text-right font-medium">Util. %</th>
@@ -213,11 +218,11 @@ export function IndiaMap({ stats }: { stats: StateStat[] }) {
                 <tr
                   key={s.state}
                   onClick={() => setSelected(s)}
-                  className={`cursor-pointer border-b border-slate-100 hover:bg-navy-50 ${
+                  className={`cursor-pointer border-b border-slate-100 hover:bg-navy-50 dark:border-slate-800 dark:hover:bg-navy-950/40 ${
                     selected?.state === s.state ? "bg-navy-50" : ""
                   }`}
                 >
-                  <td className="py-1.5 text-slate-800">{s.state}</td>
+                  <td className="py-1.5 text-slate-800 dark:text-slate-200">{s.state}</td>
                   <td className="py-1.5 text-right font-mono tabular-nums text-slate-600">
                     {formatCr(s.mpAllocatedTotal)}
                   </td>
@@ -232,7 +237,8 @@ export function IndiaMap({ stats }: { stats: StateStat[] }) {
             </tbody>
           </table>
         </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

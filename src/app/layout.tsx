@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, IBM_Plex_Mono, Anton, Playfair_Display, Nunito } from "next/font/google";
 import { AuthSessionProvider } from "@/components/session-provider";
+import { ThemeProvider } from "@/components/untitled-ui/theme-provider";
+import { RouteProvider } from "@/components/untitled-ui/route-provider";
 import "./globals.css";
 
 // design.md §4.1 — two font systems by surface mode.
@@ -41,9 +43,9 @@ const nunito = Nunito({
 });
 
 export const metadata: Metadata = {
-  title: "MPLADS AI Watchdog",
+  title: "ePehredaar",
   description:
-    "See where the money went — and prove it, on the ground. An oversight layer for MPLADS fund allocation, procurement, and citizen-verified project delivery.",
+    "Every rupee, in the open. An oversight layer for MPLADS fund allocation, procurement, and citizen-verified project delivery.",
 };
 
 export default function RootLayout({
@@ -52,11 +54,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${inter.variable} ${plexMono.variable} ${anton.variable} ${playfair.variable} ${nunito.variable} font-body antialiased`}
       >
-        <AuthSessionProvider>{children}</AuthSessionProvider>
+        <ThemeProvider>
+          <RouteProvider>
+            <AuthSessionProvider>
+              {children}
+            </AuthSessionProvider>
+          </RouteProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

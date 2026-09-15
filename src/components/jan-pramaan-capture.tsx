@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { CheckCircle, Camera, MapPin, QrCode, ThumbsDown, ThumbsUp } from "@phosphor-icons/react/dist/ssr";
 import { Button } from "@/components/ui/button";
+import { SatelliteMap } from "@/components/satellite-map";
 import { submitJanPramaanVerification } from "@/app/jan-pramaan/[id]/actions";
 
 const GEOFENCE_METERS = 50;
@@ -45,6 +47,7 @@ export function JanPramaanCapture({
   const [note, setNote] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  const router = useRouter();
   const hasSite = siteLat != null && siteLng != null;
   const withinGeofence = hasSite && distance != null && distance <= GEOFENCE_METERS;
 
@@ -243,7 +246,13 @@ export function JanPramaanCapture({
         <p className="mt-5 text-sm text-ink-950/60">Submitting…</p>
       )}
 
-      {step === "success" && <SuccessCheck />}
+      {step === "success" && (
+        <SuccessReveal
+          siteLat={siteLat}
+          siteLng={siteLng}
+          onReturn={() => router.push(`/projects/${projectId}`)}
+        />
+      )}
 
       {step === "error" && (
         <div className="mt-5">
@@ -265,26 +274,66 @@ export function JanPramaanCapture({
 // product: a single reassuring signal, under 400ms, on the citizen's
 // high-stakes rare submission. CSS transition only, so the global
 // prefers-reduced-motion override in globals.css collapses it automatically.
-function SuccessCheck() {
+//
+// changes-1.md §6 point 3 — after the confirmation checkmark, reveal the
+// satellite map and the two exit actions. The map's entrance is staggered
+// slightly after the checkmark ("then reveal") rather than simultaneous,
+// so the confirmation message is read first — still well under design.md
+// §6.1's 400ms budget per signal.
+function SuccessReveal({
+  siteLat,
+  siteLng,
+  onReturn,
+}: {
+  siteLat: number | null;
+  siteLng: number | null;
+  onReturn: () => void;
+}) {
   const [shown, setShown] = useState(false);
+  const [mapShown, setMapShown] = useState(false);
   useEffect(() => {
     const id = requestAnimationFrame(() => setShown(true));
-    return () => cancelAnimationFrame(id);
+    const mapId = setTimeout(() => setMapShown(true), 300);
+    return () => {
+      cancelAnimationFrame(id);
+      clearTimeout(mapId);
+    };
   }, []);
 
   return (
-    <div className="mt-5 flex flex-col items-center gap-3 py-6 text-center">
-      <CheckCircle
-        size={56}
-        weight="fill"
-        className={`text-healthy transition-all duration-[350ms] ease-out ${
-          shown ? "scale-100 opacity-100" : "scale-50 opacity-0"
-        }`}
-      />
-      <p className="font-display text-lg tracking-wide text-ink-950">VERIFICATION SUBMITTED</p>
-      <p className="text-sm text-ink-950/60">
-        Thanks — your submission has been added to this project&apos;s citizen consensus.
-      </p>
+    <div className="mt-5">
+      <div className="flex flex-col items-center gap-3 py-6 text-center">
+        <CheckCircle
+          size={56}
+          weight="fill"
+          className={`text-healthy transition-all duration-[350ms] ease-out ${
+            shown ? "scale-100 opacity-100" : "scale-50 opacity-0"
+          }`}
+        />
+        <p className="font-display text-lg tracking-wide text-ink-950">THANK YOU</p>
+        <p className="max-w-xs text-sm text-ink-950/60">
+          Thank you for your cooperation — we&apos;ll verify this image with our model shortly.
+        </p>
+      </div>
+
+      {siteLat != null && siteLng != null && (
+        <div
+          className={`transition-all duration-[350ms] ease-out ${
+            mapShown ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
+          }`}
+        >
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-950/50">
+            Site location
+          </p>
+          <SatelliteMap lat={siteLat} lng={siteLng} height={220} />
+        </div>
+      )}
+
+      <div className="mt-5 flex">
+        <Button variant="marigold" className="flex-1" onClick={onReturn}>
+          Return
+        </Button>
+      </div>
     </div>
   );
 }

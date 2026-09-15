@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, WarningCircle } from "@phosphor-icons/react/dist/ssr";
 import { prisma } from "@/lib/prisma";
 import { CollusionGraph, type CollusionNode, type CollusionEdgeView } from "@/components/dm/collusion-graph";
 import { COLLUSION_SHARED_ATTRIBUTES } from "@/lib/enums";
@@ -57,18 +57,27 @@ export default async function CollusionGraphPage({ params }: { params: Promise<{
 
   return (
     <div className="flex flex-col gap-6">
-      <Link href="/dm/alerts" className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-navy-700">
+      <Link href="/dm/alerts" className="inline-flex items-center gap-2 text-sm font-medium text-ink-950/50 hover:text-marigold-600">
         <ArrowLeft size={16} weight="bold" />
         Back to Alerts Inbox
       </Link>
 
-      <div>
-        <h1 className="text-3xl font-semibold text-navy-950">Collusion / Cartel Graph</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Project: <Link href={`/projects/${project.id}`} className="text-navy-700 hover:underline">{project.title}</Link>
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl tracking-tight text-ink-950">Collusion / Cartel Graph</h1>
+          <p className="mt-1 text-sm text-ink-950/60">
+            Project: <Link href={`/projects/${project.id}`} className="text-indigo-700 hover:underline">{project.title}</Link>
+          </p>
+        </div>
+        <span className="inline-flex items-center gap-1 rounded-full bg-flagged-tint px-2.5 py-0.5 text-xs font-medium text-flagged">
+          <WarningCircle size={13} weight="fill" />
+          Collusion risk flagged
+        </span>
       </div>
 
+      {/* Plain-language alert summary banner (changes-2.md §3) — Persuade card
+          pattern (paper-2/ink-950 hairline), the wording stays a calm,
+          non-technical sentence a judge or reviewer can read at a glance. */}
       <div className="rounded-lg border border-flagged/40 bg-flagged-tint p-5">
         <p className="text-sm font-semibold text-flagged">Collusion risk flagged for review</p>
         <p className="mt-1.5 text-sm text-flagged/90">
@@ -85,8 +94,16 @@ export default async function CollusionGraphPage({ params }: { params: Promise<{
         </p>
       </div>
 
-      <div className="rounded-lg border border-slate-200 bg-white p-5">
-        <CollusionGraph nodes={nodes} edges={edgeViews} projectTitle={project.title} />
+      <div className="rounded-lg border border-ink-950/10 bg-paper-2">
+        <div className="flex flex-col gap-1 border-b border-ink-950/10 px-5 py-4">
+          <h2 className="font-display text-sm tracking-wide text-ink-950">Bidder Connection Map</h2>
+          <p className="text-xs leading-relaxed text-ink-950/50">
+            Click a bidder below to see exactly what it shares with the others.
+          </p>
+        </div>
+        <div className="px-5 py-4">
+          <CollusionGraph nodes={nodes} edges={edgeViews} projectTitle={project.title} />
+        </div>
       </div>
     </div>
   );

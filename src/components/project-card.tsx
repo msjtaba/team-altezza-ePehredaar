@@ -14,12 +14,22 @@ type ProjectCardData = {
 };
 
 /**
- * data.md §2's interaction rule, applied to every project card (not just the
- * 4 real examples): a project that has reached "completed" or later opens
- * through to the detail page with its payment timeline. Anything earlier
+ * data.md §2's interaction rule, applied to every project card: a project
+ * that has reached "completed" or later is interactive. Anything earlier
  * renders as an inert card — no link, no click-through — per brain.md §4.
+ *
+ * changes-1.md §4: on the Projects tab, a click now opens a side drawer
+ * instead of navigating — pass `onOpen` and this renders as a `<button>`
+ * that calls it. Without `onOpen`, it falls back to navigating to the real
+ * `/projects/[id]` route (kept for any other/direct-link usage).
  */
-export function ProjectCard({ project }: { project: ProjectCardData }) {
+export function ProjectCard({
+  project,
+  onOpen,
+}: {
+  project: ProjectCardData;
+  onOpen?: (id: string) => void;
+}) {
   const clickable = isStageCompletedOrLater(project.status);
   const categoryLabel = PROJECT_CATEGORY_LABELS[project.category as ProjectCategory] ?? project.category;
   const stageLabel = PROJECT_STAGE_LABELS[project.status as ProjectStage] ?? project.status;
@@ -62,6 +72,18 @@ export function ProjectCard({ project }: { project: ProjectCardData }) {
 
   if (!clickable) {
     return <div className="cursor-default">{body}</div>;
+  }
+
+  if (onOpen) {
+    return (
+      <button
+        type="button"
+        onClick={() => onOpen(project.id)}
+        className="block h-full w-full text-left"
+      >
+        {body}
+      </button>
+    );
   }
 
   return (

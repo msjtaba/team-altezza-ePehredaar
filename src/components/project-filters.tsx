@@ -4,30 +4,37 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { PROJECT_CATEGORY_LABELS, PROJECT_STAGE_LABELS, type ProjectCategory, type ProjectStage } from "@/lib/enums";
 
 /**
- * Filter controls for the public project/tender listing (prd.md §4.1).
- * Client-side URL-search-param filtering — appropriate at this prototype's
- * scale (10 projects), no separate API route needed. Selecting a value
- * pushes to the URL so filters are shareable/bookmarkable and the listing
- * (a server component) re-renders filtered.
+ * Filter controls for the Projects tab (changes-1.md §4). Client-side
+ * URL-search-param filtering — appropriate at this prototype's scale (10
+ * projects), no separate API route needed. Selecting a value pushes to the
+ * URL so filters are shareable/bookmarkable and the listing (a server
+ * component) re-renders filtered.
+ *
+ * State/District lists are the **full** seeded lists (queried from Prisma
+ * in the server component, not derived from just the 10 projects) per
+ * changes-1.md §4's explicit "list all states/districts" instruction. The
+ * standalone "Select MP" dropdown is gone — the MP dropdown only appears
+ * once a State is chosen, and only lists that state's MPs.
  */
 export function ProjectFilters({
   states,
   districts,
-  mps,
+  mpsByState,
 }: {
   states: string[];
   districts: string[];
-  mps: string[];
+  mpsByState: Record<string, string[]>;
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  function setParam(key: string, value: string) {
+  function setParam(key: string, value: string, clearKeys: string[] = []) {
     const params = new URLSearchParams(searchParams.toString());
     if (value) params.set(key, value);
     else params.delete(key);
-    router.push(`${pathname}${params.toString() ? `?${params.toString()}` : ""}#projects`, {
+    for (const k of clearKeys) params.delete(k);
+    router.push(`${pathname}${params.toString() ? `?${params.toString()}` : ""}`, {
       scroll: false,
     });
   }
@@ -35,12 +42,17 @@ export function ProjectFilters({
   const selectClass =
     "rounded-md border border-ink-950/15 bg-paper px-3 py-2 text-sm text-ink-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marigold-600";
 
+  const selectedState = searchParams.get("state") ?? "";
+  const mpsForState = selectedState ? mpsByState[selectedState] ?? [] : [];
+
   return (
     <div className="flex flex-wrap items-center gap-3">
       <select
         className={selectClass}
-        value={searchParams.get("state") ?? ""}
-        onChange={(e) => setParam("state", e.target.value)}
+        value={selectedState}
+        // Changing state invalidates any previously-selected MP from a
+        // different state (changes-1.md §4's dynamic-MP-dropdown rule).
+        onChange={(e) => setParam("state", e.target.value, ["mp"])}
         aria-label="Filter by state"
       >
         <option value="">All States</option>
@@ -65,19 +77,21 @@ export function ProjectFilters({
         ))}
       </select>
 
-      <select
-        className={selectClass}
-        value={searchParams.get("mp") ?? ""}
-        onChange={(e) => setParam("mp", e.target.value)}
-        aria-label="Filter by MP"
-      >
-        <option value="">All MPs</option>
-        {mps.map((m) => (
-          <option key={m} value={m}>
-            {m}
-          </option>
-        ))}
-      </select>
+      {selectedState && (
+        <select
+          className={selectClass}
+          value={searchParams.get("mp") ?? ""}
+          onChange={(e) => setParam("mp", e.target.value)}
+          aria-label={`Filter by MP in ${selectedState}`}
+        >
+          <option value="">All MPs in {selectedState}</option>
+          {mpsForState.map((m) => (
+            <option key={m} value={m}>
+              {m}
+            </option>
+          ))}
+        </select>
+      )}
 
       <select
         className={selectClass}
@@ -114,7 +128,7 @@ export function ProjectFilters({
         searchParams.get("status")) && (
         <button
           type="button"
-          onClick={() => router.push(`${pathname}#projects`, { scroll: false })}
+          onClick={() => router.push(pathname, { scroll: false })}
           className="text-sm font-semibold text-indigo-700 underline-offset-2 hover:underline"
         >
           Clear filters

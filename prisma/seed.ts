@@ -187,6 +187,44 @@ async function main() {
     contractors.push(contractor);
   }
 
+  console.log("Seeding demo contractor accounts (changes-1.md §9.1)...");
+  // Named demo logins for the Contractor Portal build (changes-1.md §5) —
+  // one KYC-verified, one KYC-unverified, so both portal states can be
+  // demoed. Kept separate from FAKE_CONTRACTORS above (which use generated
+  // @example.com emails) because these need the exact @epehredaar.demo
+  // addresses/password the spec calls for.
+  const DEMO_CONTRACTORS = [
+    { company: "Sri Balaji Infra Projects", email: "contractor.verified@epehredaar.demo", kyc: "verified", trust: 82, phone: "9810000007", address: "18 Banjara Hills Road, Hyderabad" },
+    { company: "Deccan Builders & Co.", email: "contractor.unverified@epehredaar.demo", kyc: "unverified", trust: null, phone: "9810000008", address: "22 Abids Circle, Hyderabad" },
+  ] as const;
+  const demoContractorByCompany = new Map<string, { id: string }>();
+  for (const c of DEMO_CONTRACTORS) {
+    const user = await prisma.user.create({
+      data: {
+        name: c.company,
+        email: c.email,
+        phone: c.phone,
+        passwordHash: await bcrypt.hash("Demo@123", 10),
+        role: "contractor",
+      },
+    });
+    const contractor = await prisma.contractor.create({
+      data: {
+        userId: user.id,
+        companyName: c.company,
+        registrationNumber: `REG-${c.phone.slice(-6)}`,
+        gstNumber: c.kyc === "verified" ? `27GST${c.phone.slice(-6)}Z1` : null,
+        panNumber: c.kyc === "verified" ? `ABCDE${c.phone.slice(-4)}F` : null,
+        phone: c.phone,
+        registeredAddress: c.address,
+        kycStatus: c.kyc,
+        trustScore: c.trust ?? undefined,
+        isRealData: false,
+      },
+    });
+    demoContractorByCompany.set(c.company, contractor);
+  }
+
   console.log("Seeding real projects (data.md §2)...");
   const allProjects: { id: string; status: string; isReal: boolean; sanctioned: number }[] = [];
   for (const p of PROJECTS_REAL) {
@@ -285,6 +323,182 @@ async function main() {
     }
   }
 
+  console.log("Seeding Osmania University demo project (changes-1.md §9.3)...");
+  const osmaniaMpId = mpByName.get("Asaduddin Owaisi");
+  if (!osmaniaMpId) throw new Error("Osmania demo project references unknown MP: Asaduddin Owaisi");
+  const sriBalaji = demoContractorByCompany.get("Sri Balaji Infra Projects");
+  if (!sriBalaji) throw new Error("Osmania demo project references unknown contractor: Sri Balaji Infra Projects");
+  const osmaniaDistrictId = districtByName.get("Hyderabad")!;
+  const osmaniaProject = await prisma.project.create({
+    data: {
+      title: "Renovation and Construction of Additional Seminar Hall Block, Osmania University, Hyderabad",
+      category: "other",
+      mpId: osmaniaMpId,
+      districtId: osmaniaDistrictId,
+      sanctionedAmount: 3850000,
+      billedAmount: 3850000,
+      sanctionDate: new Date("2025-08-10"),
+      status: "completed",
+      assignedContractorId: sriBalaji.id,
+      workId: "OU-2025-114",
+      isRealData: false,
+      // Real Osmania University, Hyderabad campus coordinates
+      // (changes-1.md §9.3) — used directly rather than a jittered
+      // district center, since this is the project the Jan-Pramaan QR
+      // demo geofences against.
+      // Updated per changes-3.md §5.1 to pin the College of Engineering
+      // building specifically (hackathon venue / live Jan-Pramaan QR demo
+      // location), rather than a generic campus point. Corrected again per
+      // changes-5.md §1 to the exact pin from the provided Maps link
+      // (the §5.1 figure was an approximate, campus-wide guess).
+      latitude: 17.4068029,
+      longitude: 78.5185352,
+    },
+  });
+  allProjects.push({ id: osmaniaProject.id, status: "completed", isReal: false, sanctioned: 3850000 });
+
+  // Milestones up through "completed", mirroring the fake-project
+  // convention above. Deliberately NO JanPramaanSubmission or
+  // JanPramaanConsensus rows are created for this project: changes-1.md
+  // §9.3 requires zero prior citizen submissions so the live Jan-Pramaan
+  // demo scan is the first one. It is intentionally left out of the
+  // `jpProjects` list seeded further below — do not add it there.
+  const osmaniaMilestoneUpTo = STAGE_TO_MILESTONE_INDEX["completed"];
+  for (let m = 0; m <= osmaniaMilestoneUpTo; m++) {
+    await prisma.milestone.create({
+      data: {
+        projectId: osmaniaProject.id,
+        name: MILESTONE_SEQUENCE[m],
+        sequenceOrder: m,
+        paymentStatus: m === osmaniaMilestoneUpTo ? "released" : "pending",
+        reachedAt: new Date(2025, 7, 10 + m * 15),
+      },
+    });
+  }
+
+  console.log("Seeding Grand Meadows demo project (changes-3.md §5.2)...");
+  // Fake/demo project anchored to a real MP + constituency (Konda
+  // Vishweshwar Reddy, CHELVELLA — data.md §? MP allocation table), added
+  // for live QR-scan testing at the coordinates from the shared Maps link.
+  // Deliberately assigned to the UNVERIFIED demo contractor (Deccan
+  // Builders & Co.) so this project doubles as the unverified-contractor
+  // demo case.
+  const grandMeadowsMpId = mpByName.get("KONDA VISHWESHWAR REDDY");
+  if (!grandMeadowsMpId) throw new Error("Grand Meadows demo project references unknown MP: KONDA VISHWESHWAR REDDY");
+  const deccanBuilders = demoContractorByCompany.get("Deccan Builders & Co.");
+  if (!deccanBuilders) throw new Error("Grand Meadows demo project references unknown contractor: Deccan Builders & Co.");
+  const grandMeadowsDistrictId = districtByName.get("Hyderabad")!;
+  const grandMeadowsProject = await prisma.project.create({
+    data: {
+      title: "Development of Community Open Space and Walking Track at Grand Meadows, Attapur, Hyderabad",
+      category: "community_hall",
+      mpId: grandMeadowsMpId,
+      districtId: grandMeadowsDistrictId,
+      sanctionedAmount: 1875000,
+      billedAmount: 1875000,
+      sanctionDate: new Date("2025-09-02"),
+      status: "completed",
+      assignedContractorId: deccanBuilders.id,
+      workId: "GM-2025-041",
+      isRealData: false,
+      // Real coordinates from the shared Maps link (changes-3.md §5.2),
+      // used directly rather than a jittered district center.
+      latitude: 17.343425,
+      longitude: 78.402552,
+    },
+  });
+  allProjects.push({ id: grandMeadowsProject.id, status: "completed", isReal: false, sanctioned: 1875000 });
+
+  // Milestones up through "completed", mirroring the Osmania/fake-project
+  // convention above.
+  const grandMeadowsMilestoneUpTo = STAGE_TO_MILESTONE_INDEX["completed"];
+  for (let m = 0; m <= grandMeadowsMilestoneUpTo; m++) {
+    await prisma.milestone.create({
+      data: {
+        projectId: grandMeadowsProject.id,
+        name: MILESTONE_SEQUENCE[m],
+        sequenceOrder: m,
+        paymentStatus: m === grandMeadowsMilestoneUpTo ? "released" : "pending",
+        reachedAt: new Date(2025, 8, 2 + m * 15),
+      },
+    });
+  }
+
+  // Single payment installment per changes-3.md §5.2.
+  await prisma.payment.create({
+    data: { projectId: grandMeadowsProject.id, amount: 1875000, paidAt: new Date("2026-02-15"), status: "success" },
+  });
+
+  console.log("Seeding Sri Balaji track-record projects (changes-4.md §7)...");
+  // changes-4.md §7 — a "top-rated" verified contractor (Trust Score
+  // 82/100) with only one completed project (Osmania) doesn't read as
+  // convincing. Bump the completed-project count to 18 total by backfilling
+  // 17 more small completed works, all assigned to Sri Balaji, same
+  // MP/district as the Osmania project for narrative consistency.
+  const SRI_BALAJI_TRACK_RECORD_TITLES = [
+    "Construction of Community Drinking Water Kiosk, Malakpet, Hyderabad",
+    "Repair and Widening of Internal Roads, Chandrayangutta, Hyderabad",
+    "Installation of Solar Street Lighting, Yakutpura, Hyderabad",
+    "Construction of Public Toilet Block, Nampally, Hyderabad",
+    "Renovation of Government Primary School Building, Bahadurpura, Hyderabad",
+    "Construction of Storm Water Drainage, Kishanbagh, Hyderabad",
+    "Development of Children's Park, Santoshnagar, Hyderabad",
+    "Construction of Community Hall, Falaknuma, Hyderabad",
+    "Repair of Approach Road to Government Dispensary, Chaderghat, Hyderabad",
+    "Installation of Solar Water Pump, Barkas, Hyderabad",
+    "Construction of Boundary Wall, Government Junior College, Asifnagar",
+    "Widening of Drainage Channel, Rein Bazar, Hyderabad",
+    "Construction of Bus Shelter, Charminar, Hyderabad",
+    "Renovation of Public Library Building, Ghansi Bazar, Hyderabad",
+    "Construction of Overhead Water Tank, Uppuguda, Hyderabad",
+    "Repair of Internal Roads, Jahanuma, Hyderabad",
+    "Installation of Solar Streetlights, Talabkatta, Hyderabad",
+  ];
+  const sriBalajiMpId = mpByName.get("Asaduddin Owaisi")!;
+  const sriBalajiDistrictId = districtByName.get("Hyderabad")!;
+  for (let i = 0; i < SRI_BALAJI_TRACK_RECORD_TITLES.length; i++) {
+    const sanctioned = 900000 + (i % 5) * 350000;
+    const sanctionDate = new Date(2023, i % 12, 5 + (i % 20));
+    const trackProject = await prisma.project.create({
+      data: {
+        title: SRI_BALAJI_TRACK_RECORD_TITLES[i],
+        category: "other",
+        mpId: sriBalajiMpId,
+        districtId: sriBalajiDistrictId,
+        sanctionedAmount: sanctioned,
+        billedAmount: sanctioned,
+        sanctionDate,
+        status: "completed",
+        assignedContractorId: sriBalaji.id,
+        workId: `SBI-${2023 + Math.floor(i / 12)}-${String(100 + i).padStart(3, "0")}`,
+        isRealData: false,
+        ...jitteredCoords("Hyderabad", 900 + i),
+      },
+    });
+    allProjects.push({ id: trackProject.id, status: "completed", isReal: false, sanctioned });
+
+    const trackUpTo = STAGE_TO_MILESTONE_INDEX["completed"];
+    for (let m = 0; m <= trackUpTo; m++) {
+      await prisma.milestone.create({
+        data: {
+          projectId: trackProject.id,
+          name: MILESTONE_SEQUENCE[m],
+          sequenceOrder: m,
+          paymentStatus: m === trackUpTo ? "released" : "pending",
+          reachedAt: new Date(sanctionDate.getFullYear(), sanctionDate.getMonth(), sanctionDate.getDate() + m * 15),
+        },
+      });
+    }
+    await prisma.payment.create({
+      data: {
+        projectId: trackProject.id,
+        amount: sanctioned,
+        paidAt: new Date(sanctionDate.getFullYear(), sanctionDate.getMonth(), sanctionDate.getDate() + 120),
+        status: "success",
+      },
+    });
+  }
+
   console.log("Seeding audit dossiers (prd.md §4.7 — 10 monitored works)...");
   const riskProfiles = [22, 68, 81, 15, 45, 92, 8, 55, 73, 30];
   for (let i = 0; i < allProjects.length; i++) {
@@ -376,6 +590,22 @@ async function main() {
     },
   });
 
+  console.log("Seeding demo DM account (changes-1.md §9.2)...");
+  // Named demo login for the DM Portal build (changes-1.md §7), scoped to
+  // the existing Hyderabad district (already seeded above — same record
+  // the real Owaisi/Osmania projects use, per changes-1.md §9.2's note to
+  // reuse it rather than create a duplicate).
+  await prisma.user.create({
+    data: {
+      name: "Dr. Ravi Kumar",
+      email: "dm.hyderabad@epehredaar.demo",
+      phone: "9800000004",
+      passwordHash: await bcrypt.hash("Demo@123", 10),
+      role: "dm",
+      districtId: districtByName.get("Hyderabad"),
+    },
+  });
+
   console.log("Seeding DM alert actions + audit log trail...");
   const resolvedAlerts = seededAlerts.filter((a) => a.riskScore < 60).slice(0, 3);
   for (const alert of resolvedAlerts) {
@@ -443,6 +673,15 @@ async function main() {
   await prisma.parkedFund.create({
     data: { districtId: districtByName.get("Bhopal")!, amount: 920000, parkedSince: new Date(2025, 8, 12), reason: "Contractor selection delayed", isRealData: false },
   });
+  // Osmania demo project (not in the slice(0,6) loop above) — same
+  // ministry->state->district legs as the other completed projects, so
+  // the DM Fund Tracker reflects it consistently.
+  await prisma.fundFlow.create({
+    data: { projectId: osmaniaProject.id, fromEntity: "ministry", toEntity: "state", amount: 3850000, flowDate: new Date(2025, 6, 20), isRealData: false },
+  });
+  await prisma.fundFlow.create({
+    data: { projectId: osmaniaProject.id, fromEntity: "state", toEntity: "district", amount: 3850000, flowDate: new Date(2025, 6, 28), isRealData: false },
+  });
 
   console.log("Seeding a sample grievance...");
   await prisma.grievance.create({
@@ -463,6 +702,11 @@ async function main() {
   console.log("    contractor: bharat.infra.developers@example.com");
   console.log("    dm:         dm@example.com");
   console.log("    ministry:   ministry@example.com");
+  console.log("  changes-1.md §9 demo logins (password 'Demo@123'):");
+  console.log("    contractor (verified):   contractor.verified@epehredaar.demo");
+  console.log("    contractor (unverified): contractor.unverified@epehredaar.demo");
+  console.log("    dm (Hyderabad):          dm.hyderabad@epehredaar.demo");
+  console.log(`  Osmania demo project: ${osmaniaProject.id} (workId OU-2025-114, zero Jan-Pramaan submissions)`);
 }
 
 main()

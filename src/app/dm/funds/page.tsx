@@ -63,24 +63,24 @@ export default async function FundTrackerPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-3xl font-semibold text-navy-950">Fund Tracker</h1>
-        <p className="mt-1 text-sm text-slate-500">Ministry → State → District → Contractor fund flow.</p>
+        <h1 className="font-display text-3xl tracking-tight text-ink-950">Fund Tracker</h1>
+        <p className="mt-1 text-sm text-ink-950/60">Ministry → State → District → Contractor fund flow.</p>
       </div>
 
-      <div className="rounded-lg border border-slate-200 bg-white p-5">
+      <div className="rounded-lg border border-ink-950/10 bg-paper-2 p-5">
         {links.length > 2 ? (
           <FundSankey nodes={nodes} links={links} />
         ) : (
-          <p className="p-10 text-center text-sm text-slate-400">No fund flow data to visualize.</p>
+          <p className="p-10 text-center text-sm text-ink-950/40">No fund flow data to visualize.</p>
         )}
       </div>
 
       <section>
-        <h2 className="text-base font-semibold text-navy-950">Parked Funds — Aging Report</h2>
-        <p className="mt-1 text-xs text-slate-500">Sanctioned money that has sat unspent, by district.</p>
-        <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200 bg-white">
+        <h2 className="font-display text-sm tracking-wide text-ink-950">Parked Funds — Aging Report</h2>
+        <p className="mt-1 text-xs text-ink-950/50">Sanctioned money that has sat unspent, by district.</p>
+        <div className="mt-4 overflow-x-auto rounded-lg border border-ink-950/10 bg-paper-2">
           <table className="w-full min-w-[600px] text-sm">
-            <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+            <thead className="bg-ink-950/5 text-left text-xs uppercase tracking-wide text-ink-950/50">
               <tr>
                 <th className="px-4 py-3">District</th>
                 <th className="px-4 py-3">Amount</th>
@@ -89,32 +89,32 @@ export default async function FundTrackerPage() {
                 <th className="px-4 py-3">Reason</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-ink-950/10">
               {parkedFunds.map((f) => {
                 const days = Math.floor((now - f.parkedSince.getTime()) / dayMs);
                 const tier = days >= 180 ? "flagged" : days >= 90 ? "watch" : "healthy";
                 return (
-                  <tr key={f.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 font-medium text-navy-950">
+                  <tr key={f.id} className="hover:bg-ink-950/5">
+                    <td className="px-4 py-3 font-medium text-ink-950">
                       {f.district.name}, {f.district.state}
                     </td>
-                    <td className="px-4 py-3 font-mono tabular-nums text-slate-700">
+                    <td className="px-4 py-3 font-mono tabular-nums text-ink-950/80">
                       {formatRupees(f.amount.toString())}
                     </td>
-                    <td className="px-4 py-3 font-mono tabular-nums text-slate-500">{formatDate(f.parkedSince)}</td>
+                    <td className="px-4 py-3 font-mono tabular-nums text-ink-950/50">{formatDate(f.parkedSince)}</td>
                     <td className="px-4 py-3">
                       <Badge tier={tier}>
                         <span className="font-mono tabular-nums">{days}</span> days
                       </Badge>
                     </td>
-                    <td className="px-4 py-3 text-slate-600">{f.reason ?? "—"}</td>
+                    <td className="px-4 py-3 text-ink-950/70">{f.reason ?? "—"}</td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
           {parkedFunds.length === 0 && (
-            <p className="p-10 text-center text-sm text-slate-400">No parked funds recorded.</p>
+            <p className="p-10 text-center text-sm text-ink-950/40">No parked funds recorded.</p>
           )}
         </div>
       </section>

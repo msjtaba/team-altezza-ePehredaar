@@ -66,6 +66,38 @@ const config: Config = {
           700: "#0F6B62",
           100: "#D8F0EC",
         },
+
+        // Untitled UI React brand scale (changes-2.md §1) — generated from
+        // the site's real primary action color (marigold-600 / #E08A2E, the
+        // brand hex confirmed for the Untitled UI setup), so the shared
+        // component library's "brand" tokens map onto ePehredaar's own
+        // palette rather than Untitled UI's default purple. Used only by
+        // the Untitled UI-pattern primitives in src/components/untitled-ui/
+        // and the pages built on them (Ministry Overview, Collusion) —
+        // existing pages keep using navy/marigold/teal directly per the
+        // Round-1 design lock.
+        brand: {
+          25: "#FEFAF4",
+          50: "#FDF6EC",
+          100: "#FCEACB",
+          200: "#F8D49B",
+          300: "#F3BC6D",
+          400: "#F0A73C",
+          500: "#E89A35",
+          600: "#E08A2E",
+          700: "#B96E20",
+          800: "#8F5519",
+          900: "#6B3F13",
+          950: "#402509",
+        },
+      },
+      boxShadow: {
+        // Untitled UI's elevation scale, used by the card/chart-container
+        // primitives — additive to Tailwind's defaults, not a replacement.
+        "uui-xs": "0px 1px 2px rgba(16, 24, 40, 0.05)",
+        "uui-sm": "0px 1px 3px rgba(16, 24, 40, 0.1), 0px 1px 2px -1px rgba(16, 24, 40, 0.1)",
+        "uui-md": "0px 4px 6px -1px rgba(16, 24, 40, 0.08), 0px 2px 4px -2px rgba(16, 24, 40, 0.04)",
+        "uui-lg": "0px 12px 16px -4px rgba(16, 24, 40, 0.08), 0px 4px 6px -2px rgba(16, 24, 40, 0.03)",
       },
       fontFamily: {
         // Operate surfaces (design.md §4.1, unchanged).

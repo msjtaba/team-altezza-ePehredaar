@@ -1,14 +1,17 @@
-// Operate-mode status chip for non-risk status meaning (bid status, tender
-// status, milestone payment status, grievance status). Deliberately separate
-// from `src/components/ui/badge.tsx`'s "stage" tier, which renders Persuade
-// (`ink-*`) tokens banned on `/contractor/*` (design.md §1.1, §7). The
-// `healthy`/`watch`/`flagged` tones below reuse the locked risk-triad color
-// tokens purely for their neutral/positive/warning/negative visual meaning —
-// never to imply a risk score (design.md §3.3 pairs color with text always).
+// changes-6.md §1 retheme: Persuade-styled status chip for non-risk status
+// meaning (bid status, tender status, milestone payment status, grievance
+// status) — kept as its own small component rather than `Badge` because it
+// carries a 4-tone vocabulary (neutral/positive/warning/negative) that
+// `Badge`'s tier set doesn't map onto directly. The `healthy`/`watch`/
+// `flagged` tones below reuse the locked risk-triad color tokens purely for
+// their positive/warning/negative visual meaning — never to imply a risk
+// score (design.md §3.3 pairs color with text always). `neutral` now uses
+// the same ink-based neutral as `Badge`'s "stage" tier, matching the rest
+// of the Persuade site.
 type Tone = "neutral" | "positive" | "warning" | "negative";
 
 const tones: Record<Tone, string> = {
-  neutral: "bg-slate-100 text-slate-600",
+  neutral: "bg-ink-950/8 text-ink-950",
   positive: "bg-healthy-tint text-healthy",
   warning: "bg-watch-tint text-watch",
   negative: "bg-flagged-tint text-flagged",

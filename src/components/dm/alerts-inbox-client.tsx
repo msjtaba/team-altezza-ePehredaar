@@ -118,13 +118,13 @@ export function AlertsInboxClient({
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-3xl font-semibold text-navy-950">Alerts Inbox</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <h1 className="font-display text-3xl tracking-tight text-ink-950">Alerts Inbox</h1>
+        <p className="mt-1 text-sm text-ink-950/60">
           Every alert content shown here is sample/hardcoded — the detection engine itself is not built.
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-1 border-b border-slate-200">
+      <div className="flex flex-wrap gap-1 border-b border-ink-950/10">
         {ALERT_CATEGORIES.map((cat) => (
           <button
             key={cat}
@@ -134,12 +134,12 @@ export function AlertsInboxClient({
             }}
             className={`rounded-t-md border-b-2 px-4 py-2.5 text-sm font-medium transition-colors duration-150 ${
               tab === cat
-                ? "border-navy-700 text-navy-900"
-                : "border-transparent text-slate-500 hover:text-navy-700"
+                ? "border-marigold-600 text-ink-950"
+                : "border-transparent text-ink-950/50 hover:text-marigold-600"
             }`}
           >
             {ALERT_CATEGORY_LABELS[cat]}{" "}
-            <span className="ml-1 font-mono text-xs tabular-nums text-slate-400">{openCountByTab[cat]}</span>
+            <span className="ml-1 font-mono text-xs tabular-nums text-ink-950/40">{openCountByTab[cat]}</span>
           </button>
         ))}
       </div>
@@ -158,8 +158,8 @@ export function AlertsInboxClient({
               key={val}
               onClick={() => setJpSubFilter(val)}
               className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-150 ${
-                jpSubFilter === val ? "bg-navy-100 text-navy-900" : "bg-white text-slate-500 hover:bg-navy-50"
-              } border border-slate-200`}
+                jpSubFilter === val ? "bg-marigold-100 text-marigold-600" : "bg-paper text-ink-950/60 hover:bg-paper-2"
+              } border border-ink-950/10`}
             >
               {label}
             </button>
@@ -167,12 +167,12 @@ export function AlertsInboxClient({
         </div>
       )}
 
-      <div className="flex flex-wrap items-end gap-3 rounded-lg border border-slate-200 bg-white p-4">
+      <div className="flex flex-wrap items-end gap-3 rounded-lg border border-ink-950/10 bg-paper-2 p-4">
         <FilterField label="Project">
           <select
             value={projectFilter}
             onChange={(e) => setProjectFilter(e.target.value)}
-            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 focus:border-navy-700 focus:outline-none"
+            className="rounded-md border border-ink-950/15 bg-paper px-3 py-1.5 text-sm text-ink-950/80 focus:border-marigold-600 focus:outline-none"
           >
             <option value="">All projects</option>
             {projects.map((p) => (
@@ -186,7 +186,7 @@ export function AlertsInboxClient({
           <select
             value={contractorFilter}
             onChange={(e) => setContractorFilter(e.target.value)}
-            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 focus:border-navy-700 focus:outline-none"
+            className="rounded-md border border-ink-950/15 bg-paper px-3 py-1.5 text-sm text-ink-950/80 focus:border-marigold-600 focus:outline-none"
           >
             <option value="">All contractors</option>
             {contractors.map((c) => (
@@ -201,7 +201,7 @@ export function AlertsInboxClient({
             type="date"
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
-            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 focus:border-navy-700 focus:outline-none"
+            className="rounded-md border border-ink-950/15 bg-paper px-3 py-1.5 text-sm text-ink-950/80 focus:border-marigold-600 focus:outline-none"
           />
         </FilterField>
         {(projectFilter || contractorFilter || dateFilter) && (
@@ -211,7 +211,7 @@ export function AlertsInboxClient({
               setContractorFilter("");
               setDateFilter("");
             }}
-            className="rounded-md px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-navy-700"
+            className="rounded-md px-3 py-1.5 text-xs font-medium text-ink-950/50 hover:text-marigold-600"
           >
             Clear filters
           </button>
@@ -220,7 +220,7 @@ export function AlertsInboxClient({
 
       <div className="flex flex-col gap-3">
         {filtered.length === 0 && (
-          <div className="rounded-lg border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-400">
+          <div className="rounded-lg border border-dashed border-ink-950/15 bg-paper-2 p-10 text-center text-sm text-ink-950/40">
             No alerts match the current filters.
           </div>
         )}
@@ -235,7 +235,7 @@ export function AlertsInboxClient({
 function FilterField({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-xs font-medium text-slate-500">{label}</label>
+      <label className="text-xs font-medium text-ink-950/50">{label}</label>
       {children}
     </div>
   );
@@ -248,7 +248,7 @@ function AlertCard({ alert, actionSpecs }: { alert: InboxAlert; actionSpecs: Act
   const resolved = ["approved", "rejected"].includes(alert.status);
 
   return (
-    <div className={`rounded-lg border bg-white p-5 ${alert.hasFrozenMilestone ? "border-flagged/40" : "border-slate-200"}`}>
+    <div className={`rounded-lg border bg-paper-2 p-5 ${alert.hasFrozenMilestone ? "border-flagged/40" : "border-ink-950/10"}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex-1 min-w-[240px]">
           <div className="flex flex-wrap items-center gap-2">
@@ -259,15 +259,15 @@ function AlertCard({ alert, actionSpecs }: { alert: InboxAlert; actionSpecs: Act
             {alert.hasFrozenMilestone && <Badge tier="flagged">Payment Frozen</Badge>}
             <Badge tier="stage">{alert.status.replace(/_/g, " ")}</Badge>
           </div>
-          <p className="mt-2 text-sm text-navy-950">{alert.description}</p>
-          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+          <p className="mt-2 text-sm text-ink-950">{alert.description}</p>
+          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-950/60">
             {alert.project && (
-              <Link href={`/projects/${alert.project.id}`} className="hover:text-navy-700 hover:underline">
+              <Link href={`/projects/${alert.project.id}`} className="hover:text-marigold-600 hover:underline">
                 Project: {alert.project.title}
               </Link>
             )}
             {alert.contractor && (
-              <Link href={`/contractors/${alert.contractor.id}`} className="hover:text-navy-700 hover:underline">
+              <Link href={`/contractors/${alert.contractor.id}`} className="hover:text-marigold-600 hover:underline">
                 Contractor: {alert.contractor.companyName}
               </Link>
             )}
@@ -276,7 +276,7 @@ function AlertCard({ alert, actionSpecs }: { alert: InboxAlert; actionSpecs: Act
           {alert.type === "cartel_collusion" && alert.project && (
             <Link
               href={`/dm/audit/collusion/${alert.project.id}`}
-              className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-navy-700 hover:underline"
+              className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-indigo-700 hover:underline"
             >
               View collusion graph →
             </Link>
@@ -288,7 +288,7 @@ function AlertCard({ alert, actionSpecs }: { alert: InboxAlert; actionSpecs: Act
             actionSpecs.map((spec) => (
               <Button
                 key={spec.decision}
-                variant={spec.decision === "rejected" ? "secondary" : "primary"}
+                variant={spec.decision === "rejected" ? "outline-paper" : "marigold"}
                 className="px-3 py-1.5 text-xs"
                 onClick={() => setOpenForm(openForm?.decision === spec.decision ? null : spec)}
               >
@@ -297,7 +297,7 @@ function AlertCard({ alert, actionSpecs }: { alert: InboxAlert; actionSpecs: Act
             ))}
           <button
             onClick={() => setShowHistory((v) => !v)}
-            className="rounded-md px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-navy-700"
+            className="rounded-md px-3 py-1.5 text-xs font-medium text-ink-950/50 hover:text-marigold-600"
           >
             {showHistory ? "Hide" : "Show"} History ({alert.actions.length})
           </button>
@@ -307,20 +307,20 @@ function AlertCard({ alert, actionSpecs }: { alert: InboxAlert; actionSpecs: Act
       {openForm && <JustificationForm alertId={alert.id} spec={openForm} onDone={() => setOpenForm(null)} />}
 
       {showHistory && (
-        <div className="mt-4 rounded-md bg-slate-50 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Approval History</p>
+        <div className="mt-4 rounded-md bg-ink-950/5 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-950/50">Approval History</p>
           {alert.actions.length === 0 ? (
-            <p className="mt-2 text-xs text-slate-400">No decisions recorded yet.</p>
+            <p className="mt-2 text-xs text-ink-950/40">No decisions recorded yet.</p>
           ) : (
             <ul className="mt-2 flex flex-col gap-3">
               {alert.actions.map((act) => (
                 <li key={act.id} className="text-xs">
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge tier={decisionTier(act.decision)}>{DECISION_LABELS[act.decision] ?? act.decision}</Badge>
-                    <span className="font-medium text-navy-950">{act.dmName}</span>
-                    <span className="font-mono tabular-nums text-slate-400">{formatDate(act.createdAt)}</span>
+                    <span className="font-medium text-ink-950">{act.dmName}</span>
+                    <span className="font-mono tabular-nums text-ink-950/40">{formatDate(act.createdAt)}</span>
                   </div>
-                  <p className="mt-1 text-slate-600">{act.justificationNote}</p>
+                  <p className="mt-1 text-ink-950/70">{act.justificationNote}</p>
                 </li>
               ))}
             </ul>
@@ -361,8 +361,8 @@ function JustificationForm({
   }
 
   return (
-    <div className="mt-4 rounded-md border border-navy-100 bg-navy-50 p-4">
-      <label htmlFor={`justification-${alertId}`} className="text-xs font-medium text-navy-950">
+    <div className="mt-4 rounded-md border border-marigold-600/20 bg-marigold-100/40 p-4">
+      <label htmlFor={`justification-${alertId}`} className="text-xs font-medium text-ink-950">
         Justification note — required for &quot;{spec.label}&quot;
       </label>
       <textarea
@@ -370,14 +370,14 @@ function JustificationForm({
         value={note}
         onChange={(e) => setNote(e.target.value)}
         rows={3}
-        className="mt-1.5 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-navy-700 focus:outline-none"
+        className="mt-1.5 w-full rounded-md border border-ink-950/15 bg-paper px-3 py-2 text-sm text-ink-950/80 focus:border-marigold-600 focus:outline-none"
       />
       {error && <p className="mt-1 text-xs text-flagged">{error}</p>}
       <div className="mt-3 flex items-center gap-2">
         <Button className="px-3 py-1.5 text-xs" onClick={submit} disabled={isPending}>
           {isPending ? "Submitting…" : `Confirm ${spec.label}`}
         </Button>
-        <Button variant="ghost" className="px-3 py-1.5 text-xs" onClick={onDone} disabled={isPending}>
+        <Button variant="outline-paper" className="px-3 py-1.5 text-xs" onClick={onDone} disabled={isPending}>
           Cancel
         </Button>
       </div>

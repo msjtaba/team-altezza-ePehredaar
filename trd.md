@@ -53,6 +53,7 @@ If a future real build needs actual photo volume, this is the one piece explicit
 |---|---|---|
 | Frontend framework | **Next.js 14 (App Router) + TypeScript** | One framework covers public pages, authenticated dashboards, and lightweight API routes — no separate frontend/backend deployment needed for a prototype |
 | Styling | **Tailwind CSS** | Fast to build consistent, card-based layouts across five different dashboards without hand-writing CSS per page |
+| Frontend component / design-system layer | **Untitled UI React** (built on Tailwind CSS + React Aria) | Shared card/badge/metric/chart-container component patterns so dashboard-style UI (Ministry Overview, Collusion page) is pulled from one token set instead of styled ad hoc per page (changes-2.md §1) |
 | Data fetching / caching | **TanStack Query (React Query)** | Handles loading/error states and caching for dashboard data without extra boilerplate |
 | ORM & migrations | **Prisma** | Type-safe schema-first modeling, generates migrations directly from the schema in §5 |
 | Database | **PostgreSQL** (hosted on Supabase or Neon for the prototype) | Relational structure fits the project/contractor/alert/fund relationships well; Supabase/Neon give a free managed instance suitable for a prototype |

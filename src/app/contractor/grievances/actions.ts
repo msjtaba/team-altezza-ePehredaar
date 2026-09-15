@@ -15,6 +15,12 @@ export async function fileGrievance(formData: FormData) {
   if (!session?.user?.id) {
     redirect("/sign-in?callbackUrl=/contractor/grievances");
   }
+  // changes-4.md §4 authorization audit — server actions re-check the role
+  // independently rather than relying solely on the route-level middleware
+  // gate (server actions are invoked as a direct POST, not a page render).
+  if (session.user.role !== "contractor") {
+    redirect("/sign-in?callbackUrl=/contractor/grievances");
+  }
 
   const contractor = await prisma.contractor.findUnique({
     where: { userId: session.user.id },
@@ -31,10 +37,21 @@ export async function fileGrievance(formData: FormData) {
     redirect("/contractor/grievances?error=description_required");
   }
 
+  // Scoping fix: a crafted request could otherwise submit an alertId
+  // belonging to a different contractor's alert. Only accept it if it
+  // actually belongs to this contractor (or drop it silently otherwise).
+  let linkedAlertId: string | null = null;
+  if (alertId) {
+    const alert = await prisma.alert.findUnique({ where: { id: alertId } });
+    if (alert && alert.contractorId === contractor.id) {
+      linkedAlertId = alertId;
+    }
+  }
+
   await prisma.grievance.create({
     data: {
       contractorId: contractor.id,
-      alertId: alertId || null,
+      alertId: linkedAlertId,
       description,
       evidenceUrl: evidenceUrl || null,
       status: "open",

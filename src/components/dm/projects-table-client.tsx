@@ -31,19 +31,19 @@ export function ProjectsTableClient({ rows }: { rows: Row[] }) {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-3xl font-semibold text-navy-950">Projects</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <h1 className="font-display text-3xl tracking-tight text-ink-950">Projects</h1>
+        <p className="mt-1 text-sm text-ink-950/60">
           All {rows.length} monitored projects. Click through for the full public detail plus DM-only sections.
         </p>
       </div>
 
-      <div className="flex flex-wrap items-end gap-3 rounded-lg border border-slate-200 bg-white p-4">
+      <div className="flex flex-wrap items-end gap-3 rounded-lg border border-ink-950/10 bg-paper-2 p-4">
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-slate-500">Status</label>
+          <label className="text-xs font-medium text-ink-950/50">Status</label>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 focus:border-navy-700 focus:outline-none"
+            className="rounded-md border border-ink-950/15 bg-paper px-3 py-1.5 text-sm text-ink-950/80 focus:border-marigold-600 focus:outline-none"
           >
             <option value="">All statuses</option>
             {PROJECT_STAGES.map((s) => (
@@ -54,11 +54,11 @@ export function ProjectsTableClient({ rows }: { rows: Row[] }) {
           </select>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-slate-500">Risk</label>
+          <label className="text-xs font-medium text-ink-950/50">Risk</label>
           <select
             value={riskFilter}
             onChange={(e) => setRiskFilter(e.target.value)}
-            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 focus:border-navy-700 focus:outline-none"
+            className="rounded-md border border-ink-950/15 bg-paper px-3 py-1.5 text-sm text-ink-950/80 focus:border-marigold-600 focus:outline-none"
           >
             <option value="">All tiers</option>
             {RISK_TIERS.map((t) => (
@@ -70,9 +70,9 @@ export function ProjectsTableClient({ rows }: { rows: Row[] }) {
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+      <div className="overflow-x-auto rounded-lg border border-ink-950/10 bg-paper-2">
         <table className="w-full min-w-[880px] text-sm">
-          <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+          <thead className="bg-ink-950/5 text-left text-xs uppercase tracking-wide text-ink-950/50">
             <tr>
               <th className="px-4 py-3">Project</th>
               <th className="px-4 py-3">District</th>
@@ -82,17 +82,17 @@ export function ProjectsTableClient({ rows }: { rows: Row[] }) {
               <th className="px-4 py-3">Risk</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-ink-950/10">
             {filtered.map((r) => (
-              <tr key={r.id} className="hover:bg-slate-50">
-                <td className="px-4 py-3 font-medium text-navy-950">
+              <tr key={r.id} className="hover:bg-ink-950/5">
+                <td className="px-4 py-3 font-medium text-ink-950">
                   <Link href={`/projects/${r.id}`} className="hover:underline">
                     {r.title}
                   </Link>
                 </td>
-                <td className="px-4 py-3 text-slate-600">{r.district}</td>
-                <td className="px-4 py-3 text-slate-600">{r.contractor ?? "—"}</td>
-                <td className="px-4 py-3 font-mono tabular-nums text-slate-700">
+                <td className="px-4 py-3 text-ink-950/70">{r.district}</td>
+                <td className="px-4 py-3 text-ink-950/70">{r.contractor ?? "—"}</td>
+                <td className="px-4 py-3 font-mono tabular-nums text-ink-950/80">
                   {formatRupees(r.sanctionedAmount)}
                 </td>
                 <td className="px-4 py-3">
@@ -108,7 +108,7 @@ export function ProjectsTableClient({ rows }: { rows: Row[] }) {
           </tbody>
         </table>
         {filtered.length === 0 && (
-          <p className="p-10 text-center text-sm text-slate-400">No projects match the current filters.</p>
+          <p className="p-10 text-center text-sm text-ink-950/40">No projects match the current filters.</p>
         )}
       </div>
     </div>

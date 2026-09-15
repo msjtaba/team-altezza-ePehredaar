@@ -3,8 +3,10 @@ import { ContractorsTableClient } from "@/components/dm/contractors-table-client
 
 /**
  * DM Contractors tab (prd.md §4.4.5) — sortable by Trust Score, each linking
- * through to /contractors/[id] which now renders DM-only flag history +
- * collusion-graph link since this is an authenticated DM session.
+ * through to the same public /contractors/[id] profile. DM-only detail
+ * (flag history, collusion-graph link) is not bolted onto that public page
+ * (removed per a later change request) — it's surfaced here via this
+ * table's own columns/badges instead.
  */
 export default async function DmContractorsPage() {
   const contractors = await prisma.contractor.findMany({

@@ -5,9 +5,12 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { KycBadge } from "@/components/contractor/kyc-badge";
 
-// Operate-mode top nav (design.md §7) — Inter/navy, ≤150ms color-only
-// transitions on the active link, no hover-lift/scale (that's Persuade-only,
-// design.md §6.2).
+// changes-6.md §1 — Persuade-mode top nav (paper/ink, marigold accent,
+// Anton wordmark), matching the shared theme used by `PersuadeNav` on the
+// public site. This stays its own component rather than reusing
+// `PersuadeNav` — it's an in-portal nav (Dashboard/My Bids/My
+// Projects/Grievances + sign-out) serving a different purpose than the
+// site-wide marketing header, just recolored/refonted to match it.
 const links = [
   { href: "/contractor", label: "Dashboard" },
   { href: "/contractor/bids", label: "My Bids" },
@@ -25,12 +28,14 @@ export function PortalNav({
   const pathname = usePathname();
 
   return (
-    <header className="border-b border-slate-200 bg-white">
+    <header className="sticky top-0 z-50 border-b border-ink-950/10 bg-paper/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-dashboard flex-wrap items-center justify-between gap-4 px-6 py-3">
         <div className="flex flex-wrap items-center gap-6">
-          <Link href="/contractor" className="text-base font-semibold text-navy-950">
-            MPLADS Watchdog{" "}
-            <span className="font-normal text-slate-400">· Contractor Portal</span>
+          <Link href="/contractor" className="font-display text-base tracking-wide text-ink-950">
+            ePehredaar{" "}
+            <span className="font-body text-sm font-normal text-ink-950/50">
+              · Contractor Portal
+            </span>
           </Link>
           <nav className="flex items-center gap-1">
             {links.map((l) => {
@@ -39,10 +44,10 @@ export function PortalNav({
                 <Link
                   key={l.href}
                   href={l.href}
-                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-150 ${
+                  className={`rounded-md px-3 py-1.5 text-sm font-semibold transition-colors duration-[250ms] ${
                     active
-                      ? "bg-navy-100 text-navy-900"
-                      : "text-slate-600 hover:bg-navy-50 hover:text-navy-900"
+                      ? "bg-marigold-100 text-ink-950"
+                      : "text-ink-950/60 hover:bg-ink-950/5 hover:text-marigold-600"
                   }`}
                 >
                   {l.label}
@@ -53,14 +58,14 @@ export function PortalNav({
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <p className="text-sm font-medium text-navy-950">{companyName}</p>
+            <p className="text-sm font-medium text-ink-950">{companyName}</p>
             <div className="mt-0.5">
               <KycBadge status={kycStatus} />
             </div>
           </div>
           <button
             onClick={() => signOut({ callbackUrl: "/sign-in" })}
-            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors duration-150 hover:bg-slate-100"
+            className="rounded-md border-2 border-ink-950/15 px-3 py-1.5 text-sm font-semibold text-ink-950 transition-colors duration-[250ms] hover:border-ink-950"
           >
             Sign out
           </button>

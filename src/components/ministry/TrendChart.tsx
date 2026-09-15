@@ -10,6 +10,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { ChartCard } from "@/components/untitled-ui/chart-card";
+import { UuiBadge } from "@/components/untitled-ui/badge";
 
 export type TrendPoint = {
   month: string;
@@ -24,15 +26,12 @@ export type TrendPoint = {
 // wherever it's shown, per brain.md §4's honesty rule.
 export function TrendChart({ data }: { data: TrendPoint[] }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4">
-      <div className="flex items-baseline justify-between">
-        <h3 className="text-sm font-semibold text-navy-950">Fund Utilization Trend</h3>
-        <span className="text-[11px] font-medium text-slate-400">Illustrative — 12 mo.</span>
-      </div>
-      <p className="mt-1 text-xs text-slate-500">
-        Sample trend, not derived from seed data (no historical series exists to derive it from).
-      </p>
-      <div className="mt-3 h-64">
+    <ChartCard
+      title="Fund Utilization Trend"
+      description="Sample trend, not derived from seed data (no historical series exists to derive it from)."
+      action={<UuiBadge color="gray">Illustrative — 12 mo.</UuiBadge>}
+    >
+      <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E3EAF2" vertical={false} />
@@ -78,6 +77,6 @@ export function TrendChart({ data }: { data: TrendPoint[] }) {
           </AreaChart>
         </ResponsiveContainer>
       </div>
-    </div>
+    </ChartCard>
   );
 }

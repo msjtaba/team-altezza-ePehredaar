@@ -1,15 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getServerSession } from "next-auth";
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import { prisma } from "@/lib/prisma";
-import { authOptions } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
 import { StatusTracker } from "@/components/status-tracker";
 import { JanPramaanBanner } from "@/components/jan-pramaan-banner";
-import { DmOnlyProjectSection } from "@/components/dm/dm-only-project-section";
 import { formatRupees, formatLakhShort, formatDate } from "@/lib/format";
 import { PROJECT_CATEGORY_LABELS, PROJECT_STAGE_LABELS, isStageCompletedOrLater, type ProjectCategory, type ProjectStage } from "@/lib/enums";
+import { PersuadeNav } from "@/components/site/persuade-nav";
+import { SatelliteMap } from "@/components/satellite-map";
 
 /**
  * Individual Project Page (prd.md §4.1) — public, read-only. This URL
@@ -38,9 +37,6 @@ export default async function ProjectDetailPage({
 
   if (!project) notFound();
 
-  const session = await getServerSession(authOptions);
-  const isDm = session?.user?.role === "dm";
-
   const showPaymentTimeline = isStageCompletedOrLater(project.status);
   const totalPaid = project.payments.reduce((s, p) => s + Number(p.amount.toString()), 0);
   const categoryLabel = PROJECT_CATEGORY_LABELS[project.category as ProjectCategory] ?? project.category;
@@ -50,10 +46,11 @@ export default async function ProjectDetailPage({
 
   return (
     <main className="font-body">
+      <PersuadeNav />
       <div className="border-b border-ink-950/10 bg-paper-2">
         <div className="mx-auto max-w-5xl px-6 py-4">
           <Link
-            href="/#projects"
+            href="/projects"
             className="inline-flex items-center gap-2 text-sm font-semibold text-ink-950/60 hover:text-marigold-600"
           >
             <ArrowLeft size={16} weight="bold" />
@@ -121,6 +118,15 @@ export default async function ProjectDetailPage({
           )}
         </div>
 
+        {project.latitude !== null && project.longitude !== null && (
+          <section className="mt-14">
+            <h2 className="font-display text-xl tracking-wide text-ink-950">SATELLITE VIEW</h2>
+            <div className="mt-6">
+              <SatelliteMap lat={project.latitude} lng={project.longitude} height={320} />
+            </div>
+          </section>
+        )}
+
         <section className="mt-14">
           <h2 className="font-display text-xl tracking-wide text-ink-950">STATUS TRACKER</h2>
           <div className="mt-6 rounded-lg border border-ink-950/10 bg-paper-2 p-6">
@@ -176,8 +182,6 @@ export default async function ProjectDetailPage({
             </div>
           </section>
         )}
-
-        {isDm && <DmOnlyProjectSection projectId={project.id} />}
       </div>
     </main>
   );

@@ -100,8 +100,8 @@ export default async function DmOverviewPage() {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="text-3xl font-semibold text-navy-950">Overview</h1>
-        <p className="mt-1 text-sm text-slate-500">Jurisdiction-wide status across all monitored projects.</p>
+        <h1 className="font-display text-3xl tracking-tight text-ink-950">Overview</h1>
+        <p className="mt-1 text-sm text-ink-950/60">Jurisdiction-wide status across all monitored projects.</p>
       </div>
 
       {highPriorityAlerts.length > 0 && (
@@ -135,9 +135,9 @@ export default async function DmOverviewPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        <section className="lg:col-span-3 rounded-lg border border-slate-200 bg-white p-5">
-          <h2 className="text-base font-semibold text-navy-950">Project Risk Heatmap</h2>
-          <p className="mt-1 text-xs text-slate-500">Categorized by the highest open-alert risk tier per project.</p>
+        <section className="lg:col-span-3 rounded-lg border border-ink-950/10 bg-paper-2 p-5">
+          <h2 className="font-display text-sm tracking-wide text-ink-950">Project Risk Heatmap</h2>
+          <p className="mt-1 text-xs text-ink-950/50">Categorized by the highest open-alert risk tier per project.</p>
           <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
             {heatmap.map((p) => (
               <Link
@@ -155,18 +155,18 @@ export default async function DmOverviewPage() {
           </div>
         </section>
 
-        <section className="lg:col-span-2 rounded-lg border border-slate-200 bg-white p-5">
-          <h2 className="text-base font-semibold text-navy-950">Recent Activity</h2>
-          <p className="mt-1 text-xs text-slate-500">Last 10 events, read-only.</p>
-          <ul className="mt-4 flex flex-col divide-y divide-slate-100">
-            {activityFeed.length === 0 && <li className="py-4 text-sm text-slate-400">No activity yet.</li>}
+        <section className="lg:col-span-2 rounded-lg border border-ink-950/10 bg-paper-2 p-5">
+          <h2 className="font-display text-sm tracking-wide text-ink-950">Recent Activity</h2>
+          <p className="mt-1 text-xs text-ink-950/50">Last 10 events, read-only.</p>
+          <ul className="mt-4 flex flex-col divide-y divide-ink-950/10">
+            {activityFeed.length === 0 && <li className="py-4 text-sm text-ink-950/40">No activity yet.</li>}
             {activityFeed.map((e) => (
               <li key={e.id} className="flex items-start justify-between gap-3 py-3 text-sm">
                 <div>
-                  <p className="font-medium text-navy-950">{e.label}</p>
-                  <p className="text-xs text-slate-500">{e.detail}</p>
+                  <p className="font-medium text-ink-950">{e.label}</p>
+                  <p className="text-xs text-ink-950/60">{e.detail}</p>
                 </div>
-                <span className="whitespace-nowrap font-mono text-xs tabular-nums text-slate-400">
+                <span className="whitespace-nowrap font-mono text-xs tabular-nums text-ink-950/40">
                   {formatDate(e.at)}
                 </span>
               </li>
@@ -186,9 +186,9 @@ function tileTone(tier: RiskTier) {
 
 function StatCard({ label, value, money }: { label: string; value: string | number; money?: boolean }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4">
-      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
-      <p className={`mt-1.5 text-xl font-semibold text-navy-950 ${money ? "font-mono tabular-nums" : "font-mono tabular-nums"}`}>
+    <div className="rounded-lg border border-ink-950/10 bg-paper-2 p-4">
+      <p className="text-xs uppercase tracking-wide text-ink-950/50">{label}</p>
+      <p className={`mt-1.5 text-xl font-semibold text-ink-950 ${money ? "font-mono tabular-nums" : "font-mono tabular-nums"}`}>
         {value}
       </p>
     </div>

@@ -1,14 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getServerSession } from "next-auth";
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import { prisma } from "@/lib/prisma";
-import { authOptions } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
 import { TrustStars } from "@/components/trust-stars";
-import { DmOnlyContractorSection } from "@/components/dm/dm-only-contractor-section";
 import { formatRupees, formatDate } from "@/lib/format";
 import { PROJECT_STAGE_LABELS, type ProjectStage } from "@/lib/enums";
+import { PersuadeNav } from "@/components/site/persuade-nav";
 
 /**
  * Contractor Public Profile (prd.md §4.1) — name, KYC badge, project
@@ -30,9 +28,6 @@ export default async function ContractorProfilePage({
   });
 
   if (!contractor) notFound();
-
-  const session = await getServerSession(authOptions);
-  const isDm = session?.user?.role === "dm";
 
   const bids = await prisma.bid.findMany({
     where: { contractorId: id },
@@ -56,10 +51,11 @@ export default async function ContractorProfilePage({
 
   return (
     <main className="font-body">
+      <PersuadeNav />
       <div className="border-b border-ink-950/10 bg-paper-2">
         <div className="mx-auto max-w-5xl px-6 py-4">
           <Link
-            href="/#projects"
+            href="/projects"
             className="inline-flex items-center gap-2 text-sm font-semibold text-ink-950/60 hover:text-marigold-600"
           >
             <ArrowLeft size={16} weight="bold" />
@@ -80,7 +76,7 @@ export default async function ContractorProfilePage({
             {contractor.kycStatus === "verified" ? (
               <Badge tier="healthy">Verified</Badge>
             ) : (
-              <Badge tier="stage">Unverified</Badge>
+              <Badge tier="flagged">Unverified</Badge>
             )}
             <TrustStars score={trustScore} />
           </div>
@@ -181,8 +177,6 @@ export default async function ContractorProfilePage({
             </div>
           </section>
         )}
-
-        {isDm && <DmOnlyContractorSection contractorId={contractor.id} />}
       </div>
     </main>
   );

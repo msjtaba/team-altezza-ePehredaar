@@ -14,6 +14,7 @@ import { AlertBreakdownChart } from "@/components/ministry/AlertBreakdownChart";
 import { RiskRankings, type DistrictRisk, type ContractorRisk } from "@/components/ministry/RiskRankings";
 import { StatusFunnel } from "@/components/ministry/StatusFunnel";
 import { ActivityFeed, type ActivityItem } from "@/components/ministry/ActivityFeed";
+import { ThemeToggle } from "@/components/untitled-ui/theme-toggle";
 
 export const dynamic = "force-dynamic";
 
@@ -207,18 +208,21 @@ export default async function MinistryPage() {
     .slice(0, 10);
 
   return (
-    <main className="mx-auto max-w-dashboard px-4 py-6 sm:px-6 lg:px-8">
-      <header className="mb-6 flex flex-wrap items-end justify-between gap-3 border-b border-slate-200 pb-4">
+    <main className="mx-auto max-w-dashboard px-4 py-6 sm:px-6 lg:px-8 dark:bg-slate-950">
+      <header className="mb-6 flex flex-wrap items-end justify-between gap-3 border-b border-slate-200 pb-4 dark:border-slate-800">
         <div>
-          <h1 className="text-3xl font-semibold text-navy-950">Ministry Overview</h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <h1 className="text-3xl font-semibold text-navy-950 dark:text-slate-50">Ministry Overview</h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             National MPLADS oversight — {session?.user?.name ?? "Ministry"} view.
           </p>
         </div>
-        <p className="text-xs text-slate-400">
-          Real MP allocation &amp; project-status data mixed with illustrative trend/alert
-          history — see field-level notes below (brain.md §4).
-        </p>
+        <div className="flex items-center gap-3">
+          <p className="max-w-xs text-right text-xs text-slate-400">
+            Real MP allocation &amp; project-status data mixed with illustrative trend/alert
+            history — see field-level notes below (brain.md §4).
+          </p>
+          <ThemeToggle />
+        </div>
       </header>
 
       <div className="flex flex-col gap-6">

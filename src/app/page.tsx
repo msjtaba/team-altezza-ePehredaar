@@ -1,429 +1,289 @@
-import {
-  Users,
-  Camera,
-  HardHat,
-  Scales,
-  ChartLineUp,
-  ArrowRight,
-} from "@phosphor-icons/react/dist/ssr";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Reveal } from "@/components/reveal";
-import { Suspense } from "react";
+import Link from "next/link";
+import { WarningCircle } from "@phosphor-icons/react/dist/ssr";
 import { prisma } from "@/lib/prisma";
-import { ProjectCard } from "@/components/project-card";
-import { ProjectFilters } from "@/components/project-filters";
+import { riskTierFromScore } from "@/lib/enums";
+import { PersuadeNav } from "@/components/site/persuade-nav";
+import { DashboardIndiaMap, type StateStat } from "@/components/national-dashboard/dashboard-india-map";
+import { DashboardTrendChart, type TrendPoint } from "@/components/national-dashboard/dashboard-trend-chart";
+import { DashboardAlertBreakdownChart } from "@/components/national-dashboard/dashboard-alert-breakdown-chart";
+import {
+  DashboardRiskRankings,
+  type DistrictRisk,
+  type ContractorRisk,
+} from "@/components/national-dashboard/dashboard-risk-rankings";
+import { DashboardStatusFunnel } from "@/components/national-dashboard/dashboard-status-funnel";
+import { ALERT_CATEGORIES, ALERT_CATEGORY_LABELS, PROJECT_STAGES } from "@/lib/enums";
 
-// Real figures from data.md §1 — used here, not sample data (brain.md §4).
-const MP_COUNT = "543";
-const TOTAL_ALLOCATED_CR = "₹8,335.21 Cr";
-const STATES_COVERED = "28";
+export const dynamic = "force-dynamic";
 
-const STAT_TICKER = [
-  `${MP_COUNT} Members of Parliament monitored`,
-  `${TOTAL_ALLOCATED_CR} allocated nationally`,
-  `${STATES_COVERED} states & union territories`,
-  "5 role-based views, 1 shared truth",
-  "3-tier risk system — Healthy · Watch · Flagged",
-];
+const DELAY_THRESHOLD_DAYS = 180;
 
-const AUDIENCES = [
-  {
-    name: "Citizens",
-    desc: "Browse every tender and project in your area — no login needed.",
-    icon: Users,
-    accent: "marigold" as const,
-  },
-  {
-    name: "Citizen Verifiers",
-    desc: "Scan, photograph, and confirm a completed project from your phone.",
-    icon: Camera,
-    accent: "teal" as const,
-  },
-  {
-    name: "Contractors",
-    desc: "Bid on open tenders and track your Trust Score and payments.",
-    icon: HardHat,
-    accent: "indigo" as const,
-  },
-  {
-    name: "District Magistrates",
-    desc: "Triage alerts, approve payments, and audit every flagged project.",
-    icon: Scales,
-    accent: "marigold" as const,
-  },
-  {
-    name: "Ministry",
-    desc: "See fund utilization and risk hotspots across every state.",
-    icon: ChartLineUp,
-    accent: "teal" as const,
-  },
-] as const;
-
-const ACCENT_STYLES = {
-  marigold: {
-    chip: "bg-marigold-100 text-marigold-600",
-    ring: "group-hover:border-marigold-600",
-  },
-  teal: {
-    chip: "bg-teal-100 text-teal-700",
-    ring: "group-hover:border-teal-700",
-  },
-  indigo: {
-    chip: "bg-indigo-500/10 text-indigo-700",
-    ring: "group-hover:border-indigo-700",
-  },
-};
-
-// Simple, confident, hand-drawn constellation motif — the one place this
-// product hand-rolls decorative SVG (design.md §12 exception clause).
-function Constellation() {
-  const dots = [
-    { x: 40, y: 60, r: 3, d: "0s" },
-    { x: 140, y: 30, r: 2, d: "0.8s" },
-    { x: 220, y: 110, r: 4, d: "1.6s" },
-    { x: 310, y: 50, r: 2.5, d: "0.4s" },
-    { x: 380, y: 140, r: 3, d: "1.2s" },
-    { x: 90, y: 170, r: 2, d: "2s" },
-    { x: 260, y: 190, r: 3.5, d: "0.6s" },
-  ];
-  const lines = [
-    [0, 1],
-    [1, 2],
-    [2, 3],
-    [3, 4],
-    [0, 5],
-    [2, 6],
-  ];
-  return (
-    <svg
-      viewBox="0 0 420 220"
-      className="h-full w-full opacity-60"
-      aria-hidden="true"
-    >
-      {lines.map(([a, b], i) => (
-        <line
-          key={i}
-          x1={dots[a].x}
-          y1={dots[a].y}
-          x2={dots[b].x}
-          y2={dots[b].y}
-          stroke="#F0A73C"
-          strokeOpacity="0.25"
-          strokeWidth="1"
-        />
-      ))}
-      {dots.map((d, i) => (
-        <circle
-          key={i}
-          cx={d.x}
-          cy={d.y}
-          r={d.r}
-          fill="#F0A73C"
-          className="animate-drift"
-          style={{ animationDelay: d.d, transformOrigin: `${d.x}px ${d.y}px` }}
-        />
-      ))}
-    </svg>
-  );
+function num(d: unknown): number {
+  return d === null || d === undefined ? 0 : Number(d);
 }
 
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-  const params = await searchParams;
-  const get = (key: string) => {
-    const v = params[key];
-    return Array.isArray(v) ? v[0] : v;
-  };
+function formatCr(amountInRupees: number): string {
+  const cr = amountInRupees / 1e7;
+  return `₹${cr.toLocaleString("en-IN", { maximumFractionDigits: 2 })} Cr`;
+}
 
-  const projects = await prisma.project.findMany({
-    include: { mp: true, district: true },
-    orderBy: { sanctionDate: "desc" },
+// `Mp.allocatedAmount` is seeded already in Crore units (data.md §1 — e.g. a
+// single MP's allocation is ~15 Cr, not ~15e7 rupees; /mp-allocations sums
+// and displays it the same way). formatCr()'s /1e7 is for rupee-denominated
+// fields (Project.sanctionedAmount/billedAmount) and must NOT be applied to
+// MP allocation totals — doing so was the bug behind the KPI card reading
+// "₹0 Cr" instead of ₹8,335.21 Cr (changes-4.md §2).
+function formatCrDirect(amountInCrore: number): string {
+  return `₹${amountInCrore.toLocaleString("en-IN", { maximumFractionDigits: 2 })} Cr`;
+}
+
+/**
+ * National Overview Dashboard (changes-1.md §2, re-stated harder in
+ * changes-3.md §1–§3) — the `/` landing page. Public/unauthenticated (no
+ * session check — `/` was never behind the role middleware).
+ *
+ * Theme: converged onto Persuade (paper/ink/marigold/indigo/teal,
+ * PersuadeNav, Anton/Playfair/Nunito) to visually match /projects,
+ * /mp-allocations, and /jan-pramaan exactly, per changes-3.md §1's explicit,
+ * harder-stated instruction. This is a deliberate departure from
+ * design.md's v3 amendment (which had scoped `/` as Operate-mode alongside
+ * /ministry) — changes-3.md §1 supersedes that scoping call for this route
+ * specifically ("the dashboard currently does not visually match the
+ * Projects page... this needs to be fixed directly"). `/ministry` is
+ * unaffected: it still imports the original src/components/ministry/*
+ * chart components unchanged, while this page now imports Persuade-themed
+ * forks from src/components/national-dashboard/*, so the underlying
+ * Recharts/react-simple-maps logic is shared in spirit but the two routes
+ * no longer share component files.
+ */
+export default async function NationalOverviewPage() {
+  const [mps, projects, parkedFunds, alerts, contractors] = await Promise.all([
+    prisma.mp.findMany(),
+    prisma.project.findMany({ include: { district: true, mp: true } }),
+    prisma.parkedFund.findMany({ include: { district: true } }),
+    prisma.alert.findMany({
+      include: { project: { include: { district: true } }, contractor: true },
+    }),
+    prisma.contractor.findMany({ include: { alerts: true } }),
+  ]);
+
+  // Real — sum of all seeded Mp.allocatedAmount rows (data.md §1, changes-3.md
+  // §2's concrete acceptance test: ≈ ₹8,335.21 Cr across 543 MPs).
+  const realMpAllocationTotal = mps.reduce((sum, mp) => sum + num(mp.allocatedAmount), 0);
+
+  const monitoredSanctioned = projects.reduce((sum, p) => sum + num(p.sanctionedAmount), 0);
+  const monitoredBilled = projects.reduce((sum, p) => sum + num(p.billedAmount), 0);
+  const utilizationPct = monitoredSanctioned > 0 ? (monitoredBilled / monitoredSanctioned) * 100 : 0;
+
+  const flaggedAlertCount = alerts.filter((a) => riskTierFromScore(a.riskScore) === "flagged").length;
+
+  const completedCount = projects.filter(
+    (p) => p.status === "completed" || p.status === "citizen_verified" || p.status === "payment_released"
+  ).length;
+  const now = Date.now();
+  const delayedCount = projects.filter(
+    (p) => p.status === "in_progress" && now - new Date(p.sanctionDate).getTime() > DELAY_THRESHOLD_DAYS * 86_400_000
+  ).length;
+
+  // ── State map (real — live Prisma aggregation, same computation as /ministry) ──
+  const stateSet = new Set(mps.map((mp) => mp.state));
+  const stateStats: StateStat[] = [...stateSet].map((state) => {
+    const stateMps = mps.filter((mp) => mp.state === state);
+    const mpAllocatedTotal = stateMps.reduce((sum, mp) => sum + num(mp.allocatedAmount), 0);
+    const stateProjects = projects.filter((p) => p.district.state === state);
+    const hasProjectData = stateProjects.length > 0;
+    const projectSanctioned = stateProjects.reduce((sum, p) => sum + num(p.sanctionedAmount), 0);
+    const projectBilled = stateProjects.reduce((sum, p) => sum + num(p.billedAmount), 0);
+    const stateAlerts = alerts.filter((a) => a.project && a.project.district.state === state);
+    const maxRiskScore = stateAlerts.length ? Math.max(...stateAlerts.map((a) => a.riskScore)) : null;
+    return {
+      state,
+      mpAllocatedTotal,
+      mpCount: stateMps.length,
+      hasProjectData,
+      projectSanctioned,
+      projectBilled,
+      utilizationPct: hasProjectData && projectSanctioned > 0 ? (projectBilled / projectSanctioned) * 100 : null,
+      alertCount: stateAlerts.length,
+      maxRiskScore,
+      riskTier: maxRiskScore !== null ? riskTierFromScore(maxRiskScore) : null,
+    };
   });
 
-  const stateFilter = get("state");
-  const districtFilter = get("district");
-  const mpFilter = get("mp");
-  const categoryFilter = get("category");
-  const statusFilter = get("status");
-
-  const filteredProjects = projects.filter((p) => {
-    if (stateFilter && p.district.state !== stateFilter) return false;
-    if (districtFilter && p.district.name !== districtFilter) return false;
-    if (mpFilter && p.mp.name !== mpFilter) return false;
-    if (categoryFilter && p.category !== categoryFilter) return false;
-    if (statusFilter && p.status !== statusFilter) return false;
-    return true;
+  // ── Trend chart — illustrative synthetic curve anchored to real current
+  // totals (changes-3.md §2: fine to keep synthetic only where no real time
+  // series exists, same convention as /ministry's trendData). ─────────────
+  const MONTH_LABELS = ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep"];
+  const sanctionedCr = monitoredSanctioned / 1e7;
+  const parkedCr = parkedFunds.reduce((sum, f) => sum + num(f.amount), 0) / 1e7;
+  const trendData: TrendPoint[] = MONTH_LABELS.map((month, i) => {
+    const progress = (i + 1) / MONTH_LABELS.length;
+    return {
+      month,
+      sanctioned: Number((sanctionedCr * (0.55 + 0.45 * progress)).toFixed(2)),
+      spent: Number((sanctionedCr * (0.55 + 0.45 * progress) * (0.35 + 0.4 * progress)).toFixed(2)),
+      parked: Number((parkedCr * (0.6 + 0.5 * Math.sin(progress * 2))).toFixed(2)),
+    };
   });
 
-  const uniqueStates = Array.from(new Set(projects.map((p) => p.district.state))).sort();
-  const uniqueDistricts = Array.from(new Set(projects.map((p) => p.district.name))).sort();
-  const uniqueMps = Array.from(new Set(projects.map((p) => p.mp.name))).sort();
+  const alertBreakdown = ALERT_CATEGORIES.map((category) => ({
+    category,
+    label: ALERT_CATEGORY_LABELS[category],
+    count: alerts.filter((a) => a.category === category).length,
+  })).filter((d) => d.count > 0);
+
+  const districtMap = new Map<string, { state: string; scores: number[] }>();
+  for (const a of alerts) {
+    if (!a.project) continue;
+    const key = a.project.district.name;
+    const entry = districtMap.get(key) ?? { state: a.project.district.state, scores: [] };
+    entry.scores.push(a.riskScore);
+    districtMap.set(key, entry);
+  }
+  const districtRisk: DistrictRisk[] = [...districtMap.entries()]
+    .map(([district, { state, scores }]) => {
+      const maxRiskScore = Math.max(...scores);
+      return { district, state, maxRiskScore, alertCount: scores.length, tier: riskTierFromScore(maxRiskScore) };
+    })
+    .sort((a, b) => b.maxRiskScore - a.maxRiskScore)
+    .slice(0, 10);
+
+  const contractorRisk: ContractorRisk[] = contractors
+    .map((c) => {
+      if (c.alerts.length > 0) {
+        const score = Math.max(...c.alerts.map((a) => a.riskScore));
+        return {
+          id: c.id,
+          companyName: c.companyName,
+          score,
+          tier: riskTierFromScore(score),
+          basis: "alerts" as const,
+          kycStatus: c.kycStatus,
+        };
+      }
+      const trust = c.trustScore !== null ? num(c.trustScore) : null;
+      const score = trust !== null ? Math.round(100 - trust) : 100;
+      return {
+        id: c.id,
+        companyName: c.companyName,
+        score,
+        tier: riskTierFromScore(score),
+        basis: "trust-proxy" as const,
+        kycStatus: c.kycStatus,
+      };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 10);
+
+  const stageCounts: Record<string, number> = {};
+  for (const stage of PROJECT_STAGES) stageCounts[stage] = 0;
+  for (const p of projects) stageCounts[p.status] = (stageCounts[p.status] ?? 0) + 1;
 
   return (
     <main className="font-body">
-      {/* Nav — sticky, translucent on scroll */}
-      <header className="sticky top-0 z-50 border-b border-ink-950/10 bg-paper/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-dashboard items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2.5">
-            <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
-              <rect width="30" height="30" rx="7" fill="#26317A" />
-              <path
-                d="M8 20V10l7 6 7-6v10"
-                stroke="#E08A2E"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-              />
-            </svg>
-            <span className="font-display text-lg tracking-wide text-ink-950">
-              WATCHDOG
-            </span>
-          </div>
-          <nav className="hidden items-center gap-8 text-sm font-semibold text-ink-950/70 md:flex">
-            <a href="/#projects" className="transition-colors hover:text-marigold-600">
-              Projects
-            </a>
-            {/* TODO: no public contractor index page in Phase 2 scope (per
-                implementation.md's route map) — anchoring to the project
-                listing until a /contractors index exists. */}
-            <a href="/#projects" className="transition-colors hover:text-marigold-600">
-              Contractors
-            </a>
-            <a href="/mp-allocations" className="transition-colors hover:text-marigold-600">
-              MP Allocations
-            </a>
-            <a href="#" className="transition-colors hover:text-marigold-600">
-              Jan-Pramaan
-            </a>
-          </nav>
-          <Button variant="outline-paper" className="px-4 py-2 text-sm">
-            Sign in
-          </Button>
-        </div>
-      </header>
+      <PersuadeNav />
 
-      {/* Hero — full viewport, dark editorial, Anton display + Playfair accent */}
-      <section className="relative flex min-h-[calc(100dvh-73px)] flex-col justify-center overflow-hidden bg-ink-950">
-        {/* Ambient gradient wash */}
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(ellipse 60% 50% at 75% 20%, rgba(38,49,122,0.55), transparent 60%), radial-gradient(ellipse 50% 40% at 15% 85%, rgba(224,138,46,0.12), transparent 60%)",
-          }}
-        />
-        <div className="pointer-events-none absolute right-[4%] top-[12%] h-[220px] w-[420px] max-w-[50vw]">
-          <Constellation />
-        </div>
+      <div className="mx-auto max-w-dashboard px-4 py-10 sm:px-6 sm:py-14">
+        <p className="max-w-2xl font-serif text-base italic leading-snug text-ink-950/70 sm:text-lg">
+          &ldquo;A single-glance read on MPLADS fund health, across every state.&rdquo;
+        </p>
 
-        <div className="relative mx-auto w-full max-w-dashboard px-6 py-24">
-          <div className="max-w-3xl">
-            <p className="font-serif text-xl italic text-marigold-400 md:text-2xl">
-              A watch kept in the open.
+        <h1 className="mt-4 font-display text-3xl tracking-tight text-ink-950 sm:text-4xl">
+          NATIONAL OVERVIEW
+        </h1>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-950/60 sm:text-base">
+          Public, no login required — the same real MP allocation and project data that drives
+          every other page in this build.
+        </p>
+
+        {/* Quick-glance KPI row — the "Allocated Limit for Hon'ble MPs" card
+            is mandatory and clickable through to /mp-allocations
+            (changes-1.md §2/§3, changes-3.md §2's acceptance test). */}
+        <section aria-label="Quick-glance KPIs" className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <Link
+            href="/mp-allocations"
+            className="block rounded-lg border border-indigo-700/20 bg-indigo-700 p-5 text-white transition-all duration-[250ms] hover:-translate-y-0.5 hover:bg-indigo-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marigold-600"
+          >
+            <p className="text-xs font-semibold uppercase tracking-wide text-white/70">
+              Allocated Limit for Hon&apos;ble MPs
             </p>
-            <h1 className="mt-4 font-display text-6xl leading-[0.95] tracking-tight text-paper md:text-8xl">
-              SEE WHERE
-              <br />
-              THE MONEY WENT.
-            </h1>
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-paper/70">
-              An oversight layer for MPLADS funds — cross-checking every
-              claim against citizen-verified evidence, project by project,
-              district by district.
-            </p>
-            <div className="mt-10 flex flex-wrap items-center gap-4">
-              <a href="#projects">
-                <Button variant="marigold" className="px-7 py-3.5 text-base">
-                  View open tenders
-                  <ArrowRight className="ml-2" size={18} weight="bold" />
-                </Button>
-              </a>
-              <Button
-                variant="outline-paper"
-                className="border-paper/25 px-7 py-3.5 text-base text-paper hover:border-paper"
-              >
-                How verification works
-              </Button>
-            </div>
-          </div>
-        </div>
+            <p className="mt-1.5 font-serif text-2xl tabular-nums">{formatCrDirect(realMpAllocationTotal)}</p>
+            <p className="mt-1 text-xs text-white/70">Across {mps.length} MPs — view the full list →</p>
+          </Link>
 
-        {/* Scroll cue */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-drift text-paper/40">
-          <svg width="20" height="28" viewBox="0 0 20 28" fill="none">
-            <rect
-              x="1"
-              y="1"
-              width="18"
-              height="26"
-              rx="9"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            />
-            <circle cx="10" cy="9" r="2" fill="currentColor" />
-          </svg>
-        </div>
-      </section>
+          <KpiCard label="Total Funds Sanctioned" value={formatCr(monitoredSanctioned)} sub="Monitored project set" />
+          <KpiCard label="Total Utilized" value={`${utilizationPct.toFixed(1)}%`} sub="Billed vs. sanctioned" />
+          <KpiCard
+            label="Active High-Risk Alerts"
+            value={String(flaggedAlertCount)}
+            sub="Risk score ≥ 70"
+            emphasis={flaggedAlertCount > 0}
+            icon={<WarningCircle size={18} weight="fill" />}
+          />
+          <KpiCard
+            label="Completed vs. Delayed"
+            value={`${completedCount} / ${delayedCount}`}
+            sub="Projects, national"
+          />
+        </section>
 
-      {/* Stat marquee — one per page (design.md §6.3) */}
-      <section className="overflow-hidden border-b border-ink-950/10 bg-paper-2 py-5">
-        <div className="marquee-fade flex whitespace-nowrap">
-          <div className="flex animate-marquee items-center gap-12 pr-12">
-            {[...STAT_TICKER, ...STAT_TICKER].map((s, i) => (
-              <span
-                key={i}
-                className="flex items-center gap-3 font-serif text-lg italic text-ink-950/70"
-              >
-                {s}
-                <span className="text-marigold-600">✦</span>
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
+        {/* Deeper dashboard visualizations — prd.md §4.5, confirmed element
+            list per changes-3.md §3. */}
+        <div className="mt-10 flex flex-col gap-6">
+          <DashboardIndiaMap stats={stateStats} />
 
-      {/* Tender/Project Listing — prd.md §4.1, implementation.md Phase 2 */}
-      <section id="projects" className="border-b border-ink-950/10 scroll-mt-20">
-        <div className="mx-auto max-w-dashboard px-6 py-24">
-          <Reveal>
-            <p className="font-serif text-xl italic text-teal-700">Open the ledger</p>
-            <h2 className="mt-2 font-display text-4xl tracking-tight text-ink-950 md:text-5xl">
-              TENDERS &amp; PROJECTS
-            </h2>
-            <p className="mt-3 max-w-2xl text-base leading-relaxed text-ink-950/70">
-              Every sanctioned MPLADS project in this build, real and
-              structurally-matched sample records alike — filterable by
-              State, District, MP, Category, and Status.
-            </p>
-          </Reveal>
-
-          <div className="mt-8">
-            <Suspense fallback={null}>
-              <ProjectFilters states={uniqueStates} districts={uniqueDistricts} mps={uniqueMps} />
-            </Suspense>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <DashboardTrendChart data={trendData} />
+            <DashboardAlertBreakdownChart data={alertBreakdown} />
           </div>
 
-          <p className="mt-6 text-sm text-ink-950/50">
-            Showing {filteredProjects.length} of {projects.length} projects
-          </p>
+          <DashboardRiskRankings districts={districtRisk} contractors={contractorRisk} />
 
-          {filteredProjects.length === 0 ? (
-            <div className="mt-6 rounded-lg border border-dashed border-ink-950/15 bg-paper-2 p-12 text-center text-ink-950/50">
-              No projects match these filters.
-            </div>
-          ) : (
-            <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredProjects.map((p, i) => (
-                <Reveal key={p.id} delay={Math.min(i, 6) * 60}>
-                  <ProjectCard
-                    project={{
-                      id: p.id,
-                      title: p.title,
-                      category: p.category,
-                      status: p.status,
-                      sanctionedAmount: p.sanctionedAmount.toString(),
-                      mp: { name: p.mp.name },
-                      district: { name: p.district.name, state: p.district.state },
-                    }}
-                  />
-                </Reveal>
-              ))}
-            </div>
-          )}
+          <DashboardStatusFunnel counts={stageCounts} />
         </div>
-      </section>
+      </div>
 
-      {/* Five audiences — interactive hover cards */}
-      <section className="border-b border-ink-950/10">
-        <div className="mx-auto max-w-dashboard px-6 py-24">
-          <Reveal>
-            <h2 className="font-display text-4xl tracking-tight text-ink-950 md:text-5xl">
-              ONE DATASET, FIVE HONEST VIEWS
-            </h2>
-            <p className="mt-3 max-w-2xl text-base leading-relaxed text-ink-950/70">
-              Every role sees the same underlying project and fund data —
-              scoped to exactly what they need, nothing they shouldn&apos;t.
-            </p>
-          </Reveal>
-          <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {AUDIENCES.map((a, i) => {
-              const Icon = a.icon;
-              const accent = ACCENT_STYLES[a.accent];
-              return (
-                <Reveal key={a.name} delay={i * 80}>
-                  <div
-                    className={`group h-full rounded-lg border-2 border-transparent bg-paper-2 p-7 transition-all duration-[300ms] hover:-translate-y-1.5 hover:shadow-xl hover:shadow-ink-950/5 ${accent.ring}`}
-                  >
-                    <span
-                      className={`inline-flex h-12 w-12 items-center justify-center rounded-full ${accent.chip}`}
-                    >
-                      <Icon size={24} weight="bold" />
-                    </span>
-                    <h3 className="mt-5 font-display text-xl tracking-wide text-ink-950">
-                      {a.name.toUpperCase()}
-                    </h3>
-                    <p className="mt-2 text-sm leading-relaxed text-ink-950/65">
-                      {a.desc}
-                    </p>
-                  </div>
-                </Reveal>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Mission pull-quote — Playfair italic, editorial */}
-      <section className="border-b border-ink-950/10 bg-paper-2">
-        <div className="mx-auto max-w-3xl px-6 py-28 text-center">
-          <Reveal>
-            <p className="font-serif text-3xl italic leading-snug text-ink-950 md:text-4xl">
-              &ldquo;Every rupee has a route. Every project has a ground
-              truth. This is what it looks like when both are visible —
-              to a citizen, a contractor, and a magistrate, all at once.&rdquo;
-            </p>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* Risk system legend — dark band for contrast, still functionally locked */}
-      <section className="bg-ink-950">
-        <div className="mx-auto max-w-dashboard px-6 py-20">
-          <Reveal>
-            <h2 className="font-display text-3xl tracking-tight text-paper md:text-4xl">
-              ONE RISK SYSTEM, EVERYWHERE
-            </h2>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-paper/60">
-              Every alert, dossier, and project card uses the same
-              three-tier scale — never a color without the number next to
-              it.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              <Badge tier="healthy">Healthy · risk 12%</Badge>
-              <Badge tier="watch">Watch · risk 54%</Badge>
-              <Badge tier="flagged">Flagged · risk 81%</Badge>
-              <Badge tier="stage">Stage: In Progress</Badge>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      <footer className="bg-ink-950">
-        <div className="mx-auto max-w-dashboard px-6 py-10 text-xs leading-relaxed text-paper/40">
+      <footer className="border-t border-ink-950/10 bg-ink-950">
+        <div className="mx-auto max-w-dashboard px-4 py-10 text-xs leading-relaxed text-paper/40 sm:px-6">
           <p>
-            MP fund allocation figures are real, sourced from the official
-            MPLADS allocation list. Alert scores, Trust Scores, and
-            Jan-Pramaan consensus data shown elsewhere in this prototype are
-            illustrative sample data — no detection model runs live in this
-            build.
+            MP fund allocation figures are real, sourced from the official MPLADS allocation list.
+            The 12-month utilization trend has no equivalent historical series in this dataset and
+            is illustrative, anchored to real current totals — every other figure above is computed
+            live from the same records shown elsewhere in this build.
           </p>
         </div>
       </footer>
     </main>
+  );
+}
+
+function KpiCard({
+  label,
+  value,
+  sub,
+  emphasis,
+  icon,
+}: {
+  label: string;
+  value: string;
+  sub: string;
+  emphasis?: boolean;
+  icon?: React.ReactNode;
+}) {
+  return (
+    <div
+      className={`rounded-lg border p-5 ${
+        emphasis ? "border-flagged/30 bg-flagged-tint/40" : "border-ink-950/10 bg-paper-2"
+      }`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-ink-950/50">{label}</p>
+        {icon && <span className={emphasis ? "text-flagged" : "text-ink-950/40"}>{icon}</span>}
+      </div>
+      <p className={`mt-1.5 font-serif text-2xl tabular-nums ${emphasis ? "text-flagged" : "text-ink-950"}`}>
+        {value}
+      </p>
+      <p className="mt-1 text-xs leading-snug text-ink-950/50">{sub}</p>
+    </div>
   );
 }
