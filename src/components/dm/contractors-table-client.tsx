@@ -1,0 +1,80 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+
+type Row = {
+  id: string;
+  companyName: string;
+  kycStatus: string;
+  trustScore: number | null;
+  projectCount: number;
+  openAlertCount: number;
+  hasCollusionFlag: boolean;
+};
+
+export function ContractorsTableClient({ rows }: { rows: Row[] }) {
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+
+  const sorted = useMemo(() => {
+    return rows.slice().sort((a, b) => {
+      const av = a.trustScore ?? -1;
+      const bv = b.trustScore ?? -1;
+      return sortDir === "desc" ? bv - av : av - bv;
+    });
+  }, [rows, sortDir]);
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div>
+        <h1 className="text-3xl font-semibold text-navy-950">Contractors</h1>
+        <p className="mt-1 text-sm text-slate-500">{rows.length} vendors on record, sortable by Trust Score.</p>
+      </div>
+
+      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+        <table className="w-full min-w-[720px] text-sm">
+          <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+            <tr>
+              <th className="px-4 py-3">Contractor</th>
+              <th className="px-4 py-3">KYC</th>
+              <th
+                className="cursor-pointer select-none px-4 py-3"
+                onClick={() => setSortDir((d) => (d === "desc" ? "asc" : "desc"))}
+              >
+                Trust Score {sortDir === "desc" ? "↓" : "↑"}
+              </th>
+              <th className="px-4 py-3">Projects</th>
+              <th className="px-4 py-3">Open Alerts</th>
+              <th className="px-4 py-3">Collusion Flag</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {sorted.map((c) => (
+              <tr key={c.id} className="hover:bg-slate-50">
+                <td className="px-4 py-3 font-medium text-navy-950">
+                  <Link href={`/contractors/${c.id}`} className="hover:underline">
+                    {c.companyName}
+                  </Link>
+                </td>
+                <td className="px-4 py-3">
+                  <Badge tier={c.kycStatus === "verified" ? "healthy" : "stage"}>
+                    {c.kycStatus === "verified" ? "Verified" : "Unverified"}
+                  </Badge>
+                </td>
+                <td className="px-4 py-3 font-mono tabular-nums text-slate-700">
+                  {c.trustScore !== null ? c.trustScore.toFixed(0) : "—"}
+                </td>
+                <td className="px-4 py-3 font-mono tabular-nums text-slate-600">{c.projectCount}</td>
+                <td className="px-4 py-3 font-mono tabular-nums text-slate-600">{c.openAlertCount}</td>
+                <td className="px-4 py-3">
+                  {c.hasCollusionFlag ? <Badge tier="flagged">Linked</Badge> : <span className="text-slate-300">—</span>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  design.md §3 — two token surfaces:
+  - Persuade (public site): warm ink/paper, set as the page default below.
+  - Operate (dashboards): Slate neutrals, applied locally via `bg-white`/
+    `text-slate-*` utilities when those routes are built (implementation.md
+    Phase 4-6) — intentionally not the global default.
+*/
+body {
+  background: theme("colors.paper.DEFAULT");
+  color: theme("colors.ink.950");
+  font-feature-settings: "cv11", "ss01";
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Marquee track edges fade instead of hard-cutting (design.md §6.2 polish). */
+  .marquee-fade {
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 8%,
+      black 92%,
+      transparent
+    );
+  }
+}
+
+/* design.md §6.3 — prefers-reduced-motion is mandatory, no exceptions. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

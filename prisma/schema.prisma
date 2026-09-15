@@ -1,0 +1,345 @@
+// Prisma schema — mirrors trd.md §5 exactly, with two documented deviations:
+//
+// 1. Datasource is SQLite, not PostgreSQL/Supabase/Neon (trd.md §2). No
+//    hosted Postgres instance is available in this build environment.
+//    Every model/relation/field below is identical to what a Postgres
+//    schema would need — switching `provider` to "postgresql" and pointing
+//    DATABASE_URL at a real instance is the only change required later.
+//    Logged in tracker.md §3 decision area.
+// 2. SQLite has no native enum type, so trd.md's enum columns are modeled
+//    as `String` here, with allowed values documented in the comment above
+//    each field and enforced at the application boundary via
+//    `src/lib/enums.ts`. On Postgres these would become real Prisma enums.
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ── 5.1 Identity & Roles ─────────────────────────────────────────────
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String?  @unique
+  phone        String?  @unique
+  passwordHash String?  @map("password_hash")
+  /// citizen | contractor | dm | ministry | admin
+  role         String
+  districtId   String?  @map("district_id")
+  district     District? @relation(fields: [districtId], references: [id])
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  contractor         Contractor?
+  janPramaanSubmissions JanPramaanSubmission[]
+  alertActions       AlertAction[]
+  resolvedGrievances Grievance[] @relation("ResolvedByDM")
+
+  @@map("users")
+}
+
+// ── 5.2 Reference Data ───────────────────────────────────────────────
+model Mp {
+  id              String   @id @default(uuid())
+  srNo            Int      @unique @map("sr_no")
+  name            String
+  constituency    String
+  state           String
+  /// Deviation #5 (tracker.md) — trd.md's schema had no column for this;
+  /// added because data.md §1's entire real dataset is this figure.
+  /// Null only for the one documented source gap (Sr. No. 108).
+  allocatedAmount Decimal? @map("allocated_amount")
+  isRealData      Boolean  @default(true) @map("is_real_data")
+
+  projects Project[]
+
+  @@map("mps")
+}
+
+model District {
+  id    String @id @default(uuid())
+  name  String
+  state String
+
+  users        User[]
+  projects     Project[]
+  parkedFunds  ParkedFund[]
+
+  @@map("districts")
+}
+
+// ── 5.3 Contractors ──────────────────────────────────────────────────
+model Contractor {
+  id                  String   @id @default(uuid())
+  userId              String   @unique @map("user_id")
+  user                User     @relation(fields: [userId], references: [id])
+  companyName         String   @map("company_name")
+  registrationNumber  String   @map("registration_number")
+  gstNumber           String?  @map("gst_number")
+  panNumber           String?  @map("pan_number")
+  phone               String
+  registeredAddress   String?  @map("registered_address")
+  /// unverified | verified
+  kycStatus           String   @default("unverified") @map("kyc_status")
+  trustScore          Decimal? @map("trust_score")
+  isRealData          Boolean  @default(false) @map("is_real_data")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  bids            Bid[]
+  projects        Project[]
+  alerts          Alert[]
+  grievances      Grievance[]
+  edgesAsA        CollusionEdge[] @relation("EdgeContractorA")
+  edgesAsB        CollusionEdge[] @relation("EdgeContractorB")
+
+  @@map("contractors")
+}
+
+// ── 5.4 Projects, Tenders & Bids ─────────────────────────────────────
+model Project {
+  id                   String   @id @default(uuid())
+  title                String
+  description          String?
+  /// road | school | solar_plant | community_hall | drainage | other
+  category             String
+  mpId                 String   @map("mp_id")
+  mp                   Mp       @relation(fields: [mpId], references: [id])
+  districtId           String   @map("district_id")
+  district             District @relation(fields: [districtId], references: [id])
+  sanctionedAmount     Decimal  @map("sanctioned_amount")
+  billedAmount         Decimal  @default(0) @map("billed_amount")
+  sanctionDate         DateTime @map("sanction_date")
+  latitude             Float?
+  longitude            Float?
+  /// sanctioned | tendered | awarded | in_progress | completed | citizen_verified | payment_released
+  status               String
+  assignedContractorId String?  @map("assigned_contractor_id")
+  assignedContractor   Contractor? @relation(fields: [assignedContractorId], references: [id])
+  workId               String?  @map("work_id")
+  isRealData           Boolean  @default(false) @map("is_real_data")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  tenders             Tender[]
+  milestones          Milestone[]
+  janPramaanSubmissions JanPramaanSubmission[]
+  janPramaanConsensus JanPramaanConsensus?
+  alerts              Alert[]
+  auditDossier        AuditDossier?
+  collusionEdges      CollusionEdge[]
+  fundFlows           FundFlow[]
+  payments            Payment[]
+
+  @@map("projects")
+}
+
+/// A project's payment/installment timeline — powers the public detail card
+/// for completed projects (data.md §2's "Total Amount Paid" + timeline).
+model Payment {
+  id        String   @id @default(uuid())
+  projectId String   @map("project_id")
+  project   Project  @relation(fields: [projectId], references: [id])
+  amount    Decimal
+  paidAt    DateTime @map("paid_at")
+  /// success | pending | failed
+  status    String   @default("success")
+
+  @@map("payments")
+}
+
+model Tender {
+  id          String   @id @default(uuid())
+  projectId   String   @map("project_id")
+  project     Project  @relation(fields: [projectId], references: [id])
+  bidDeadline DateTime @map("bid_deadline")
+  /// open | closed | awarded
+  status      String
+
+  bids Bid[]
+
+  @@map("tenders")
+}
+
+model Bid {
+  id                    String   @id @default(uuid())
+  tenderId              String   @map("tender_id")
+  tender                Tender   @relation(fields: [tenderId], references: [id])
+  contractorId          String   @map("contractor_id")
+  contractor            Contractor @relation(fields: [contractorId], references: [id])
+  priceQuote            Decimal  @map("price_quote")
+  proposedTimelineDays  Int      @map("proposed_timeline_days")
+  supportingDocsUrl     String?  @map("supporting_docs_url")
+  /// submitted | under_review | won | lost
+  status                String   @default("submitted")
+  submittedAt           DateTime @default(now()) @map("submitted_at")
+
+  @@map("bids")
+}
+
+model Milestone {
+  id             String    @id @default(uuid())
+  projectId      String    @map("project_id")
+  project        Project   @relation(fields: [projectId], references: [id])
+  /// sanctioned | started | in_process | completed | citizen_verified | paid
+  name           String
+  sequenceOrder  Int       @map("sequence_order")
+  /// pending | released | frozen
+  paymentStatus  String    @default("pending") @map("payment_status")
+  reachedAt      DateTime? @map("reached_at")
+
+  @@map("milestones")
+}
+
+// ── 5.5 Jan-Pramaan ──────────────────────────────────────────────────
+model JanPramaanSubmission {
+  id               String   @id @default(uuid())
+  projectId        String   @map("project_id")
+  project          Project  @relation(fields: [projectId], references: [id])
+  citizenId        String?  @map("citizen_id")
+  citizen          User?    @relation(fields: [citizenId], references: [id])
+  photoUrl         String   @map("photo_url")
+  deviceTimestamp  DateTime @map("device_timestamp")
+  serverTimestamp  DateTime @default(now()) @map("server_timestamp")
+  gpsLat           Float    @map("gps_lat")
+  gpsLng           Float    @map("gps_lng")
+  gpsDeviationM    Float?   @map("gps_deviation_m")
+  mockLocationFlag Boolean  @default(false) @map("mock_location_flag")
+  photoHash        String?  @map("photo_hash")
+  /// up | down
+  vote             String
+  note             String?
+  isRealData       Boolean  @default(false) @map("is_real_data")
+
+  @@map("jan_pramaan_submissions")
+}
+
+model JanPramaanConsensus {
+  projectId         String   @id @map("project_id")
+  project           Project  @relation(fields: [projectId], references: [id])
+  submissionCount   Int      @default(0) @map("submission_count")
+  thumbsUpCount     Int      @default(0) @map("thumbs_up_count")
+  thumbsDownCount   Int      @default(0) @map("thumbs_down_count")
+  /// awaiting | verified | disputed
+  status            String   @default("awaiting")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("jan_pramaan_consensus")
+}
+
+// ── 5.6 Alerts & Audit ───────────────────────────────────────────────
+model Alert {
+  id           String   @id @default(uuid())
+  /// financial_procurement | image_forensics | jan_pramaan | fund_timeline
+  category     String
+  /// cost_anomaly | duplicate_project | split_tender | cartel_collusion |
+  /// gps_mismatch | duplicate_image | timestamp_anomaly | negative_consensus |
+  /// mock_location | parked_funds | stalled_project
+  type         String
+  projectId    String?  @map("project_id")
+  project      Project? @relation(fields: [projectId], references: [id])
+  contractorId String?  @map("contractor_id")
+  contractor   Contractor? @relation(fields: [contractorId], references: [id])
+  riskScore    Int      @map("risk_score")
+  description  String
+  /// open | approved | rejected | audit_triggered | reminder_sent | escalated
+  status       String   @default("open")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  actions AlertAction[]
+  grievances Grievance[]
+
+  @@map("alerts")
+}
+
+model AlertAction {
+  id                 String   @id @default(uuid())
+  alertId            String   @map("alert_id")
+  alert              Alert    @relation(fields: [alertId], references: [id])
+  dmId               String   @map("dm_id")
+  dm                 User     @relation(fields: [dmId], references: [id])
+  /// approved_with_justification | audit_initiated | rejected | physical_audit_requested | reminder_sent | escalated
+  decision           String
+  justificationNote  String   @map("justification_note")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  @@map("alert_actions")
+}
+
+model AuditDossier {
+  id                String   @id @default(uuid())
+  caseId            String   @unique @map("case_id")
+  projectId         String   @unique @map("project_id")
+  project           Project  @relation(fields: [projectId], references: [id])
+  category          String
+  riskScore         Int      @map("risk_score")
+  billedAmount      Decimal  @map("billed_amount")
+  sanctionedAmount  Decimal  @map("sanctioned_amount")
+  alertTag          String?  @map("alert_tag")
+  isRealData        Boolean  @default(false) @map("is_real_data")
+
+  @@map("audit_dossiers")
+}
+
+// ── 5.7 Collusion Graph (static scenario) ────────────────────────────
+model CollusionEdge {
+  id               String   @id @default(uuid())
+  contractorAId    String   @map("contractor_a_id")
+  contractorA      Contractor @relation("EdgeContractorA", fields: [contractorAId], references: [id])
+  contractorBId    String   @map("contractor_b_id")
+  contractorB      Contractor @relation("EdgeContractorB", fields: [contractorBId], references: [id])
+  /// phone_number | pan_prefix | registered_address
+  sharedAttribute  String   @map("shared_attribute")
+  projectId        String   @map("project_id")
+  project          Project  @relation(fields: [projectId], references: [id])
+
+  @@map("collusion_edges")
+}
+
+// ── 5.8 Funds ─────────────────────────────────────────────────────────
+model FundFlow {
+  id         String   @id @default(uuid())
+  projectId  String?  @map("project_id")
+  project    Project? @relation(fields: [projectId], references: [id])
+  /// ministry | state | district
+  fromEntity String   @map("from_entity")
+  /// state | district | contractor
+  toEntity   String   @map("to_entity")
+  amount     Decimal
+  flowDate   DateTime @map("flow_date")
+  isRealData Boolean  @default(false) @map("is_real_data")
+
+  @@map("fund_flows")
+}
+
+model ParkedFund {
+  id         String   @id @default(uuid())
+  districtId String   @map("district_id")
+  district   District @relation(fields: [districtId], references: [id])
+  amount     Decimal
+  parkedSince DateTime @map("parked_since")
+  reason     String?
+  isRealData Boolean  @default(false) @map("is_real_data")
+
+  @@map("parked_funds")
+}
+
+// ── 5.9 Grievances ───────────────────────────────────────────────────
+model Grievance {
+  id             String   @id @default(uuid())
+  contractorId   String   @map("contractor_id")
+  contractor     Contractor @relation(fields: [contractorId], references: [id])
+  alertId        String?  @map("alert_id")
+  alert          Alert?   @relation(fields: [alertId], references: [id])
+  description    String
+  evidenceUrl    String?  @map("evidence_url")
+  /// open | resolved | rejected
+  status         String   @default("open")
+  resolvedByDmId String?  @map("resolved_by_dm_id")
+  resolvedByDm   User?    @relation("ResolvedByDM", fields: [resolvedByDmId], references: [id])
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@map("grievances")
+}
