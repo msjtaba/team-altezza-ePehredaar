@@ -1,4 +1,4 @@
-# MPLADS AI Watchdog — Prototype
+# ePehredaar MPLADS AI Watchdog — Prototype
 
 An oversight-layer prototype for India's MPLADS scheme — five role-based views (public, citizen verifier, contractor, District Magistrate, Ministry) over one shared fund/project dataset, with a demonstration (not live) fraud-alert and citizen-verification layer.
 
