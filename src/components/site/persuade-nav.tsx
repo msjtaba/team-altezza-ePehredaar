@@ -70,6 +70,9 @@ export function PersuadeNav() {
               ePehredaar
             </span>
           </Link>
+          <span className="hidden border-l border-ink-950/15 pl-2.5 text-xs font-semibold uppercase tracking-wide text-ink-950/40 lg:inline">
+            Decoding Fraud, Defending Infrastructure
+          </span>
         </div>
         <nav className="hidden items-center gap-7 text-sm font-semibold text-ink-950/70 md:flex">
           <Link href="/projects" className="transition-colors hover:text-marigold-600">

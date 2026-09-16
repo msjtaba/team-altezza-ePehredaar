@@ -350,9 +350,10 @@ async function main() {
       // building specifically (hackathon venue / live Jan-Pramaan QR demo
       // location), rather than a generic campus point. Corrected again per
       // changes-5.md §1 to the exact pin from the provided Maps link
-      // (the §5.1 figure was an approximate, campus-wide guess).
-      latitude: 17.4068029,
-      longitude: 78.5185352,
+      // (the §5.1 figure was an approximate, campus-wide guess). Corrected
+      // again to the pin from https://maps.app.goo.gl/huxXYyLvHLaDncWf8.
+      latitude: 17.4070297,
+      longitude: 78.5190206,
     },
   });
   allProjects.push({ id: osmaniaProject.id, status: "completed", isReal: false, sanctioned: 3850000 });
