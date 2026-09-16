@@ -70,7 +70,13 @@ export function JanPramaanCapture({
       (err) => {
         setGeoError(
           err.code === err.PERMISSION_DENIED
-            ? "Location permission denied. Enable it in your browser settings to verify."
+            ? // Once a browser has been told "Block" for this site, re-enabling the
+              // phone's general location toggle does NOT undo that per-site block —
+              // the user has to reset it for this site specifically (e.g. Android
+              // Chrome: lock icon → Permissions → Location; iOS Safari: Settings →
+              // Safari → Location, or Settings → Privacy → Location Services →
+              // Safari Websites).
+              "Location is blocked for this site. Your phone's location service being on isn't enough — open your browser's site settings (tap the lock/info icon next to the address bar, or Settings > Safari/Chrome > Location) and set Location to Allow for this site, then try again."
             : "Couldn't get your location. Try again."
         );
         setLocating(false);
@@ -78,6 +84,19 @@ export function JanPramaanCapture({
       { enableHighAccuracy: true, timeout: 10000 }
     );
   }
+
+  // If the browser silently blocked the site (no prompt), the user has to leave
+  // the page to fix it in Settings. Auto-retry once they come back so they don't
+  // have to remember to hit "Verify" again.
+  useEffect(() => {
+    if (!geoError) return;
+    function onVisible() {
+      if (document.visibilityState === "visible") locate();
+    }
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [geoError]);
 
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
